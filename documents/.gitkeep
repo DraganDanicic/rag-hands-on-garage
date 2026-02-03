@@ -1,0 +1,2 @@
+# This directory is for storing PDF documents to be processed
+# Add your PDF files here before running: npm run generate-embeddings

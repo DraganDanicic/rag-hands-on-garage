@@ -1,0 +1,2 @@
+# This directory stores generated embeddings
+# The embeddings.json file will be created here after running: npm run generate-embeddings

@@ -1,0 +1,42 @@
+{
+  "name": "rag-hands-on-garage",
+  "version": "1.0.0",
+  "description": "A hands-on training project for building a Retrieval-Augmented Generation (RAG) system from scratch using Node.js and TypeScript",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node --esm src/cli/chat.ts",
+    "generate-embeddings": "ts-node --esm src/cli/generate-embeddings.ts",
+    "chat": "ts-node --esm src/cli/chat.ts",
+    "test": "echo \"Error: no test command yet\" && exit 1"
+  },
+  "keywords": [
+    "rag",
+    "retrieval-augmented-generation",
+    "llm",
+    "embeddings",
+    "vector-search",
+    "openai",
+    "gemini",
+    "typescript",
+    "training"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pdf-parse": "^1.1.1",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.10.5",
+    "@types/pdf-parse": "^1.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
