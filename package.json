@@ -9,7 +9,9 @@
     "dev": "ts-node --esm src/cli/chat.ts",
     "generate-embeddings": "ts-node --esm src/cli/generate-embeddings.ts",
     "chat": "ts-node --esm src/cli/chat.ts",
-    "test": "echo \"Error: no test command yet\" && exit 1"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "keywords": [
     "rag",
@@ -25,16 +27,20 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "pdf-parse": "^1.1.1",
     "axios": "^1.7.9",
+    "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
-    "chalk": "^5.4.1"
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
-    "typescript": "^5.7.3",
-    "ts-node": "^10.9.2",
+    "@jest/globals": "^30.2.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.5",
-    "@types/pdf-parse": "^1.1.4"
+    "@types/pdf-parse": "^1.1.4",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">=18.0.0"

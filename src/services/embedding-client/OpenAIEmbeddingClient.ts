@@ -7,7 +7,7 @@ export class OpenAIEmbeddingClient implements IEmbeddingClient {
   private readonly maxRetries = 3;
   private readonly retryDelay = 1000; // 1 second
 
-  constructor(private apiKey: string) {
+  constructor(private readonly apiKey: string) {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error('OpenAI API key is required');
     }
@@ -15,7 +15,7 @@ export class OpenAIEmbeddingClient implements IEmbeddingClient {
     this.client = axios.create({
       baseURL: 'https://api.openai.com/v1',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       timeout: 30000, // 30 seconds
