@@ -8,8 +8,7 @@ import { fileURLToPath } from 'url';
  * Loads configuration from environment variables with defaults
  */
 export class ConfigService implements IConfigService {
-  private readonly openaiApiKey: string;
-  private readonly geminiApiKey: string;
+  private readonly llmFarmApiKey: string;
   private readonly chunkSize: number;
   private readonly chunkOverlap: number;
   private readonly topK: number;
@@ -25,9 +24,8 @@ export class ConfigService implements IConfigService {
     const __dirname = path.dirname(__filename);
     const projectRoot = path.resolve(__dirname, '../..');
 
-    // Load API keys (required)
-    this.openaiApiKey = this.getRequiredEnvVar('OPENAI_API_KEY');
-    this.geminiApiKey = this.getRequiredEnvVar('GEMINI_API_KEY');
+    // Load API key (required)
+    this.llmFarmApiKey = this.getRequiredEnvVar('LLM_FARM_API_KEY');
 
     // Load optional configuration with defaults
     this.chunkSize = this.parseNumber(process.env['CHUNK_SIZE'], 500);
@@ -39,12 +37,8 @@ export class ConfigService implements IConfigService {
     this.embeddingsPath = process.env['EMBEDDINGS_PATH'] ?? path.join(projectRoot, 'data', 'embeddings.json');
   }
 
-  getOpenAiApiKey(): string {
-    return this.openaiApiKey;
-  }
-
-  getGeminiApiKey(): string {
-    return this.geminiApiKey;
+  getLlmFarmApiKey(): string {
+    return this.llmFarmApiKey;
   }
 
   getChunkSize(): number {

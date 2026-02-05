@@ -4,14 +4,9 @@
  */
 export interface IConfigService {
   /**
-   * Get OpenAI API key for embedding generation
+   * Get LLM Farm API key for both embedding generation and LLM queries
    */
-  getOpenAiApiKey(): string;
-
-  /**
-   * Get Google Gemini API key for LLM queries
-   */
-  getGeminiApiKey(): string;
+  getLlmFarmApiKey(): string;
 
   /**
    * Get chunk size for text splitting (number of characters)

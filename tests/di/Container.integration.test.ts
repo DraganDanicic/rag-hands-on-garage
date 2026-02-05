@@ -16,8 +16,7 @@ describe('Container Integration', () => {
   beforeEach(() => {
     // Save and set up environment
     originalEnv = { ...process.env };
-    process.env['OPENAI_API_KEY'] = 'test-openai-key';
-    process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+    process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
     process.env['CHUNK_SIZE'] = '1000';
     process.env['CHUNK_OVERLAP'] = '100';
     process.env['TOP_K'] = '5';
@@ -64,8 +63,7 @@ describe('Container Integration', () => {
       const container = createContainer();
       const configService = container.getConfigService();
 
-      expect(configService.getOpenAiApiKey()).toBe('test-openai-key');
-      expect(configService.getGeminiApiKey()).toBe('test-gemini-key');
+      expect(configService.getLlmFarmApiKey()).toBe('test-llm-farm-key');
       expect(configService.getChunkSize()).toBe(1000);
       expect(configService.getChunkOverlap()).toBe(100);
       expect(configService.getTopK()).toBe(5);
@@ -87,10 +85,10 @@ describe('Container Integration', () => {
 
   describe('Error Handling', () => {
     it('should throw error when required environment variables are missing', () => {
-      delete process.env['OPENAI_API_KEY'];
+      delete process.env['LLM_FARM_API_KEY'];
 
       expect(() => createContainer()).toThrow(
-        'Required environment variable OPENAI_API_KEY is not set'
+        'Required environment variable LLM_FARM_API_KEY is not set'
       );
     });
   });

@@ -43,8 +43,8 @@ export class Container implements IContainer {
     this.textChunker = createTextChunker(chunkingConfig);
 
     // Initialize API clients with configuration
-    this.embeddingClient = createEmbeddingClient(this.configService.getOpenAiApiKey());
-    this.llmClient = createLlmClient(this.configService.getGeminiApiKey());
+    this.embeddingClient = createEmbeddingClient(this.configService.getLlmFarmApiKey());
+    this.llmClient = createLlmClient(this.configService.getLlmFarmApiKey());
 
     // Initialize embedding store with configured path
     this.embeddingStore = createEmbeddingStore(this.configService.getEmbeddingsPath());

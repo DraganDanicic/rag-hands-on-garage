@@ -16,8 +16,7 @@ describe('Container', () => {
   beforeEach(() => {
     // Save and set up environment
     originalEnv = { ...process.env };
-    process.env['OPENAI_API_KEY'] = 'test-openai-key';
-    process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+    process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
     process.env['CHUNK_SIZE'] = '1000';
     process.env['CHUNK_OVERLAP'] = '100';
     process.env['TOP_K'] = '5';
@@ -34,8 +33,7 @@ describe('Container', () => {
       const configService = container.getConfigService();
 
       expect(configService).toBeDefined();
-      expect(configService.getOpenAiApiKey()).toBe('test-openai-key');
-      expect(configService.getGeminiApiKey()).toBe('test-gemini-key');
+      expect(configService.getLlmFarmApiKey()).toBe('test-llm-farm-key');
     });
 
     it('should instantiate document reader service', () => {
@@ -119,8 +117,7 @@ describe('Container', () => {
       const container = new Container();
       const configService = container.getConfigService();
 
-      expect(configService.getOpenAiApiKey()).toBe('test-openai-key');
-      expect(configService.getGeminiApiKey()).toBe('test-gemini-key');
+      expect(configService.getLlmFarmApiKey()).toBe('test-llm-farm-key');
     });
   });
 
@@ -200,10 +197,10 @@ describe('Container', () => {
 
   describe('Error Handling', () => {
     it('should throw error when required environment variables are missing', () => {
-      delete process.env['OPENAI_API_KEY'];
+      delete process.env['LLM_FARM_API_KEY'];
 
       expect(() => new Container()).toThrow(
-        'Required environment variable OPENAI_API_KEY is not set'
+        'Required environment variable LLM_FARM_API_KEY is not set'
       );
     });
   });

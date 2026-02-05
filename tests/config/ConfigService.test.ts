@@ -25,40 +25,27 @@ describe('ConfigService', () => {
   });
 
   describe('Required API Keys', () => {
-    it('should throw error when OPENAI_API_KEY is missing', () => {
-      delete process.env['OPENAI_API_KEY'];
-      process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+    it('should throw error when LLM_FARM_API_KEY is missing', () => {
+      delete process.env['LLM_FARM_API_KEY'];
 
       expect(() => new ConfigService()).toThrow(
-        'Required environment variable OPENAI_API_KEY is not set'
+        'Required environment variable LLM_FARM_API_KEY is not set'
       );
     });
 
-    it('should throw error when GEMINI_API_KEY is missing', () => {
-      process.env['OPENAI_API_KEY'] = 'test-openai-key';
-      delete process.env['GEMINI_API_KEY'];
-
-      expect(() => new ConfigService()).toThrow(
-        'Required environment variable GEMINI_API_KEY is not set'
-      );
-    });
-
-    it('should load API keys when both are provided', () => {
-      process.env['OPENAI_API_KEY'] = 'test-openai-key';
-      process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+    it('should load API key when provided', () => {
+      process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
 
       const config = new ConfigService();
 
-      expect(config.getOpenAiApiKey()).toBe('test-openai-key');
-      expect(config.getGeminiApiKey()).toBe('test-gemini-key');
+      expect(config.getLlmFarmApiKey()).toBe('test-llm-farm-key');
     });
   });
 
   describe('Default Values', () => {
     beforeEach(() => {
-      // Set required API keys
-      process.env['OPENAI_API_KEY'] = 'test-openai-key';
-      process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+      // Set required API key
+      process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
     });
 
     it('should use default chunkSize of 500 when not specified', () => {
@@ -106,9 +93,8 @@ describe('ConfigService', () => {
 
   describe('Custom Values', () => {
     beforeEach(() => {
-      // Set required API keys
-      process.env['OPENAI_API_KEY'] = 'test-openai-key';
-      process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+      // Set required API key
+      process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
     });
 
     it('should use custom chunkSize when provided', () => {
@@ -154,9 +140,8 @@ describe('ConfigService', () => {
 
   describe('Invalid Values', () => {
     beforeEach(() => {
-      // Set required API keys
-      process.env['OPENAI_API_KEY'] = 'test-openai-key';
-      process.env['GEMINI_API_KEY'] = 'test-gemini-key';
+      // Set required API key
+      process.env['LLM_FARM_API_KEY'] = 'test-llm-farm-key';
     });
 
     it('should fallback to default when chunkSize is invalid', () => {
