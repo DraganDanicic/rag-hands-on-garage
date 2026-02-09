@@ -1,13 +1,12 @@
 # LLM Client Service
 
 ## Responsibility
-Sends prompts to Google Gemini 2.0 Flash Lite API and returns generated responses.
+Sends prompts to Bosch LLM Farm API (gemini-2.0-flash-lite model) and returns generated responses.
 
 ## Public Interface
 ```typescript
 interface ILlmClient {
-  generateResponse(prompt: string): Promise<string>;
-  generateResponseWithOptions(request: LlmRequest): Promise<LlmResponse>;
+  generateResponse(request: LlmRequest): Promise<LlmResponse>;
 }
 ```
 
@@ -24,29 +23,30 @@ import { createLlmClient } from './services/llm-client';
 
 const llmClient = createLlmClient(apiKey);
 
-// Simple usage
-const response = await llmClient.generateResponse("What is RAG?");
-console.log(response);
-
-// With options
-const detailedResponse = await llmClient.generateResponseWithOptions({
-  prompt: "Explain RAG in detail",
+const response = await llmClient.generateResponse({
+  prompt: "What is RAG?",
   temperature: 0.7,
   maxTokens: 500
 });
-console.log(detailedResponse.text);
+console.log(response.text);
+console.log(`Tokens used: ${response.usage?.totalTokens}`);
 ```
 
 ## Implementation Notes
-- Uses Google Gemini 2.0 Flash Lite model
+- Uses Bosch LLM Farm endpoint for gemini-2.0-flash-lite
 - Default temperature: 0.7 (balanced creativity/consistency)
-- Includes retry logic for API failures
+- Default max tokens: 2048
+- Includes retry logic for transient API failures (3 retries with exponential backoff)
 - Validates API key on instantiation
-- Streams responses for better UX (optional enhancement)
+- Handles 401/403 (invalid key), 429 (rate limit), 400 (bad request) errors
+- Custom header: `genaiplatform-farm-subscription-key`
+- Timeout: 60 seconds
+- Returns token usage metadata when available
 
 ## Testing Considerations
-- Mock HTTP calls to Gemini API
-- Test error handling for API failures
-- Verify correct request format
-- Test with various temperature settings
-- Validate response parsing
+- Mock HTTP calls to LLM Farm API
+- Test error handling for 401, 403, 429, 400, 500 status codes
+- Verify correct request format with custom headers
+- Test with various temperature and maxTokens settings
+- Validate response parsing (text and usage metadata)
+- Test retry logic for 5xx errors

@@ -26,7 +26,12 @@ describe('ConfigService', () => {
 
   describe('Required API Keys', () => {
     it('should throw error when LLM_FARM_API_KEY is missing', () => {
+      // Clear both process.env and ensure dotenv doesn't load it
       delete process.env['LLM_FARM_API_KEY'];
+      delete process.env['OPENAI_API_KEY'];
+      delete process.env['GEMINI_API_KEY'];
+      // Override with empty to prevent dotenv from loading
+      process.env['LLM_FARM_API_KEY'] = '';
 
       expect(() => new ConfigService()).toThrow(
         'Required environment variable LLM_FARM_API_KEY is not set'

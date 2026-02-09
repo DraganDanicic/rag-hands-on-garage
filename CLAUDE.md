@@ -156,7 +156,9 @@ Managed by `ConfigService` (`src/config/`):
 
 ### Important Implementation Notes
 
-1. **ES Modules**: Project uses ES modules. All imports must include `.js` extensions even in TypeScript files (e.g., `import { foo } from './bar.js'`)
+1. **Proxy Configuration**: When running within the Bosch corporate network, the application requires a local HTTP proxy (localhost:3128) to access the LLM Farm API. The codebase uses the `tunnel` package instead of Axios's native proxy support to avoid redirect loop issues. See [PROXY_SETUP.md](./PROXY_SETUP.md) for details.
+
+2. **ES Modules**: Project uses ES modules. All imports must include `.js` extensions even in TypeScript files (e.g., `import { foo } from './bar.js'`)
 
 2. **Jest Configuration**: Tests require `--experimental-vm-modules` flag due to ESM usage
 

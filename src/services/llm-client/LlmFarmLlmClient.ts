@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import * as tunnel from 'tunnel';
 import { ILlmClient } from './ILlmClient.js';
 import { LlmRequest } from './models/LlmRequest.js';
 import { LlmResponse } from './models/LlmResponse.js';
@@ -14,6 +15,16 @@ export class LlmFarmLlmClient implements ILlmClient {
       throw new Error('LLM Farm API key is required');
     }
 
+    // Configure proxy using tunnel package (Axios native proxy has issues with Bosch network)
+    // The tunnel package properly handles HTTPS over HTTP proxy connections
+    const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY;
+    const httpsAgent = proxyUrl ? tunnel.httpsOverHttp({
+      proxy: {
+        host: '127.0.0.1',
+        port: 3128
+      }
+    }) : undefined;
+
     this.client = axios.create({
       baseURL: 'https://aoai-farm.bosch-temp.com/api/openai/deployments/google-gemini-2-0-flash-lite/chat/completions',
       headers: {
@@ -21,6 +32,8 @@ export class LlmFarmLlmClient implements ILlmClient {
         'Content-Type': 'application/json',
       },
       timeout: 60000, // 60 seconds
+      httpsAgent, // Use tunnel agent for proxy support
+      proxy: false, // Disable Axios's built-in proxy (doesn't work with this setup)
     });
   }
 

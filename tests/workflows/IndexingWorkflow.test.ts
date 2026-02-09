@@ -35,6 +35,7 @@ describe('IndexingWorkflow', () => {
       getEmbeddingsPath: jest.fn(() => '/path/to/embeddings.json'),
       getOpenAiApiKey: jest.fn(() => 'test-key'),
       getGeminiApiKey: jest.fn(() => 'test-key'),
+      getLlmFarmApiKey: jest.fn(() => 'test-key'),
       getChunkSize: jest.fn(() => 500),
       getChunkOverlap: jest.fn(() => 50),
       getTopK: jest.fn(() => 3),

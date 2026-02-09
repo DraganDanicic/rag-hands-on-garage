@@ -1,7 +1,7 @@
 # Embedding Client Service
 
 ## Responsibility
-Generates vector embeddings by calling the OpenAI text-embedding-3-small API.
+Generates vector embeddings by calling the Bosch LLM Farm API (text-embedding-3-small model).
 
 ## Public Interface
 ```typescript
@@ -34,15 +34,18 @@ const embeddings = await embeddingClient.generateEmbeddings([
 ```
 
 ## Implementation Notes
-- Uses OpenAI text-embedding-3-small model (1536 dimensions)
+- Uses Bosch LLM Farm endpoint for text-embedding-3-small (1536 dimensions)
 - Supports batch processing for efficiency
-- Includes retry logic for transient API failures
+- Includes retry logic for transient API failures (3 retries with exponential backoff)
 - Validates API key on instantiation
-- Rate limiting should be handled externally
+- Handles 401/403 (invalid key), 429 (rate limit), 400 (bad request) errors
+- Custom header: `genaiplatform-farm-subscription-key`
+- Timeout: 30 seconds
 
 ## Testing Considerations
-- Mock HTTP calls to OpenAI API
-- Test error handling for API failures
-- Verify correct request format
+- Mock HTTP calls to LLM Farm API
+- Test error handling for 401, 403, 429, 400, 500 status codes
+- Verify correct request format with custom headers
 - Test batch processing logic
-- Validate embedding vector dimensions
+- Validate embedding vector dimensions (1536)
+- Test retry logic for 5xx errors

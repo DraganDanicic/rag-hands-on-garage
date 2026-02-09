@@ -85,7 +85,9 @@ describe('Container Integration', () => {
 
   describe('Error Handling', () => {
     it('should throw error when required environment variables are missing', () => {
+      // Clear and set to empty to override dotenv loading
       delete process.env['LLM_FARM_API_KEY'];
+      process.env['LLM_FARM_API_KEY'] = '';
 
       expect(() => createContainer()).toThrow(
         'Required environment variable LLM_FARM_API_KEY is not set'

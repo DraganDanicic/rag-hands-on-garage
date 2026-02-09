@@ -34,7 +34,7 @@ describe('LLM Farm Integration Tests', () => {
 
     axiosCreateMock = jest.fn(() => axiosInstanceMock);
     mockedAxios.create = axiosCreateMock;
-    mockedAxios.isAxiosError = jest.fn((error: any) => error?.isAxiosError === true);
+    mockedAxios.isAxiosError = jest.fn((error: any) => error?.isAxiosError === true) as any;
   });
 
   afterEach(() => {
@@ -131,10 +131,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 401 Unauthorized', async () => {
         const client = new LlmFarmEmbeddingClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 401, data: { error: { message: 'Unauthorized' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 401, data: { error: { message: 'Unauthorized' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(client.generateEmbedding('test')).rejects.toThrow(
           'Invalid LLM Farm API key'
@@ -144,10 +144,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 403 Forbidden', async () => {
         const client = new LlmFarmEmbeddingClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 403, data: { error: { message: 'Forbidden' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 403, data: { error: { message: 'Forbidden' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(client.generateEmbedding('test')).rejects.toThrow(
           'Invalid LLM Farm API key'
@@ -157,10 +157,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 429 Rate Limit', async () => {
         const client = new LlmFarmEmbeddingClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 429, data: { error: { message: 'Rate limit exceeded' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 429, data: { error: { message: 'Rate limit exceeded' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(client.generateEmbedding('test')).rejects.toThrow(
           'LLM Farm API rate limit exceeded'
@@ -170,10 +170,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 400 Bad Request', async () => {
         const client = new LlmFarmEmbeddingClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 400, data: { error: { message: 'Invalid input' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 400, data: { error: { message: 'Invalid input' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(client.generateEmbedding('test')).rejects.toThrow(
           'Invalid request to LLM Farm API: Invalid input'
@@ -183,11 +183,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should retry on 500 Server Error and eventually fail', async () => {
         const client = new LlmFarmEmbeddingClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValue({
-          isAxiosError: true,
-          response: { status: 500, data: { error: { message: 'Server error' } } },
-          message: 'Server error',
-        });
+        const error: any = new Error('Server error');
+        error.isAxiosError = true;
+        error.response = { status: 500, data: { error: { message: 'Server error' } } };
+        axiosInstanceMock.post.mockRejectedValue(error);
 
         await expect(client.generateEmbedding('test')).rejects.toThrow(
           'LLM Farm API error: Server error'
@@ -368,10 +367,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 401 Unauthorized', async () => {
         const client = new LlmFarmLlmClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 401, data: { error: { message: 'Unauthorized' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 401, data: { error: { message: 'Unauthorized' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(
           client.generateResponse({ prompt: 'test' })
@@ -381,10 +380,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 403 Forbidden', async () => {
         const client = new LlmFarmLlmClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 403, data: { error: { message: 'Forbidden' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 403, data: { error: { message: 'Forbidden' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(
           client.generateResponse({ prompt: 'test' })
@@ -394,10 +393,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 429 Rate Limit', async () => {
         const client = new LlmFarmLlmClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 429, data: { error: { message: 'Rate limit exceeded' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 429, data: { error: { message: 'Rate limit exceeded' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(
           client.generateResponse({ prompt: 'test' })
@@ -407,10 +406,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should throw error on 400 Bad Request', async () => {
         const client = new LlmFarmLlmClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValueOnce({
-          isAxiosError: true,
-          response: { status: 400, data: { error: { message: 'Invalid request' } } },
-        });
+        const error: any = new Error('Request failed');
+        error.isAxiosError = true;
+        error.response = { status: 400, data: { error: { message: 'Invalid request' } } };
+        axiosInstanceMock.post.mockRejectedValueOnce(error);
 
         await expect(
           client.generateResponse({ prompt: 'test' })
@@ -420,11 +419,10 @@ describe('LLM Farm Integration Tests', () => {
       it('should retry on 500 Server Error and eventually fail', async () => {
         const client = new LlmFarmLlmClient(testApiKey);
 
-        axiosInstanceMock.post.mockRejectedValue({
-          isAxiosError: true,
-          response: { status: 500, data: { error: { message: 'Server error' } } },
-          message: 'Server error',
-        });
+        const error: any = new Error('Server error');
+        error.isAxiosError = true;
+        error.response = { status: 500, data: { error: { message: 'Server error' } } };
+        axiosInstanceMock.post.mockRejectedValue(error);
 
         await expect(
           client.generateResponse({ prompt: 'test' })

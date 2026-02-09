@@ -17,8 +17,8 @@ This project provides practical experience with RAG implementation by building a
 
 - **Runtime**: Node.js (v18+)
 - **Language**: TypeScript
-- **Embedding Service**: OpenAI text-embedding-3-small
-- **LLM Service**: Google Gemini 2.0 Flash Lite
+- **Embedding Service**: Bosch LLM Farm (text-embedding-3-small)
+- **LLM Service**: Bosch LLM Farm (gemini-2.0-flash-lite)
 - **Storage**: Local file system (JSON)
 - **Interface**: CLI/Terminal
 
@@ -34,13 +34,12 @@ The system follows an isolated service architecture where:
 
 1. **Document Reader** - Reads and extracts text from PDF files
 2. **Text Chunker** - Splits text into chunks with configurable overlap
-3. **Embedding Client** - Generates vector embeddings via OpenAI API
+3. **Embedding Client** - Generates vector embeddings via Bosch LLM Farm API
 4. **Embedding Store** - Stores and retrieves embeddings from JSON files
 5. **Vector Search** - Finds similar chunks using cosine similarity
-6. **LLM Client** - Communicates with Google Gemini API
+6. **LLM Client** - Communicates with Bosch LLM Farm API
 7. **Prompt Builder** - Constructs RAG prompts with context
 8. **Progress Reporter** - Displays console progress output
-9. **RAG Orchestrator** - Coordinates the complete RAG flow
 
 ## Setup Instructions
 
@@ -55,25 +54,37 @@ npm install
 Create a `.env` file in the project root (use `.env.example` as a template):
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
+LLM_FARM_API_KEY=your_llm_farm_api_key_here
 ```
 
 **Getting API Keys:**
-- OpenAI API: https://platform.openai.com/api-keys
-- Google Gemini API: https://ai.google.dev/
+- Bosch LLM Farm: https://aoai-farm.bosch-temp.com (internal Bosch service)
+- Provides access to both embedding generation and LLM services
+- Note: 6M token/month limit
+- **Important**: Requires local proxy setup within Bosch network - see [PROXY_SETUP.md](./PROXY_SETUP.md)
 
 ### 3. Configure Settings (Optional)
 
-Edit `src/config/default-config.ts` to adjust:
-- `chunkSize`: Number of characters per chunk (default: 500)
-- `chunkOverlap`: Characters to overlap between chunks (default: 50)
-- `topK`: Number of chunks to retrieve during queries (default: 3)
-- `promptTemplate`: Template for constructing RAG prompts
+Add these optional environment variables to your `.env` file:
+- `CHUNK_SIZE`: Number of characters per chunk (default: 500)
+- `CHUNK_OVERLAP`: Characters to overlap between chunks (default: 50)
+- `TOP_K`: Number of chunks to retrieve during queries (default: 3)
+- `DOCUMENTS_PATH`: Path to documents folder (default: ./documents)
+- `EMBEDDINGS_PATH`: Path to embeddings file (default: ./data/embeddings.json)
 
 ## Usage Workflow
 
-### Step 1: Add PDF Documents
+### Step 1: Test Connectivity (Optional)
+
+Verify your LLM Farm API connection:
+
+```bash
+npm run check-connections
+```
+
+This will test both the embedding and LLM services and report their status.
+
+### Step 2: Add PDF Documents
 
 Copy your PDF documents into the `documents/` folder:
 
@@ -81,7 +92,7 @@ Copy your PDF documents into the `documents/` folder:
 cp your-document.pdf documents/
 ```
 
-### Step 2: Generate Embeddings
+### Step 3: Generate Embeddings
 
 Process your PDFs and create embeddings:
 
@@ -92,11 +103,11 @@ npm run generate-embeddings
 This will:
 - Read all PDFs from the `documents/` folder
 - Split text into chunks based on configuration
-- Generate embeddings using OpenAI API
+- Generate embeddings using Bosch LLM Farm API
 - Store embeddings in `data/embeddings.json`
 - Display progress in the console
 
-### Step 3: Start Chat Interface
+### Step 4: Start Chat Interface
 
 Run the interactive chat interface:
 
@@ -115,20 +126,20 @@ Type `exit` or `quit` to end the session.
 
 ## How It Works
 
-### Embedding Generation Flow
+### Embedding Generation Flow (IndexingWorkflow)
 
 1. **Read PDFs** - Extract text from PDF files
 2. **Chunk Text** - Split into overlapping segments
-3. **Generate Embeddings** - Call OpenAI API for each chunk
+3. **Generate Embeddings** - Call LLM Farm API for each chunk
 4. **Store** - Save embeddings to local JSON file
 5. **Report Progress** - Display status in console
 
-### Query Flow
+### Query Flow (QueryWorkflow)
 
 1. **Embed Query** - Convert user question to vector
 2. **Search** - Find N most similar chunks (cosine similarity)
 3. **Build Prompt** - Construct prompt with retrieved context
-4. **Query LLM** - Send to Gemini API
+4. **Query LLM** - Send to LLM Farm API
 5. **Display Answer** - Show response to user
 
 ## Project Structure
@@ -137,16 +148,25 @@ Type `exit` or `quit` to end the session.
 rag-hands-on-garage/
 ├── src/
 │   ├── services/          # Isolated service modules
-│   ├── workflows/         # High-level orchestration
-│   ├── config/           # Configuration management
-│   ├── cli/              # CLI entry points
-│   └── container.ts      # Dependency injection
+│   │   ├── document-reader/
+│   │   ├── text-chunker/
+│   │   ├── embedding-client/
+│   │   ├── embedding-store/
+│   │   ├── vector-search/
+│   │   ├── llm-client/
+│   │   ├── prompt-builder/
+│   │   └── progress-reporter/
+│   ├── workflows/         # IndexingWorkflow & QueryWorkflow
+│   ├── config/           # ConfigService
+│   ├── di/               # Dependency injection Container
+│   └── cli/              # CLI entry points (3 commands)
 ├── documents/            # Input PDFs (add your files here)
 ├── data/                 # Generated embeddings
-├── tests/                # Unit tests
+├── tests/                # Unit and integration tests
 ├── package.json
 ├── tsconfig.json
-└── README.md
+├── README.md
+└── CLAUDE.md             # Development guide
 ```
 
 ## Development
@@ -177,14 +197,17 @@ npm test
 
 ## Configuration Reference
 
-All configuration is in `src/config/`:
+All configuration is managed via environment variables (`ConfigService`):
 
-- `chunkSize`: Characters per chunk (e.g., 500)
-- `chunkOverlap`: Overlap between chunks (e.g., 50)
-- `topK`: Number of chunks to retrieve (e.g., 3)
-- `openaiApiKey`: OpenAI API key for embeddings
-- `geminiApiKey`: Google Gemini API key
-- `promptTemplate`: Template with `{context}` and `{question}` placeholders
+**Required:**
+- `LLM_FARM_API_KEY`: Bosch LLM Farm API key (for both embeddings and LLM)
+
+**Optional (with defaults):**
+- `CHUNK_SIZE`: Characters per chunk (default: 500)
+- `CHUNK_OVERLAP`: Overlap between chunks (default: 50)
+- `TOP_K`: Number of chunks to retrieve (default: 3)
+- `DOCUMENTS_PATH`: Path to documents folder (default: ./documents)
+- `EMBEDDINGS_PATH`: Path to embeddings JSON file (default: ./data/embeddings.json)
 
 ## Learning Outcomes
 
@@ -202,17 +225,66 @@ By completing this project, you will learn:
 
 ## Troubleshooting
 
+### Proxy Configuration Issues
+
+**Problem**: "Maximum number of redirects exceeded" error when generating embeddings
+
+**Root Cause**:
+- Axios's built-in proxy support doesn't work correctly with corporate HTTP proxies (like Bosch's proxy at localhost:3128)
+- The proxy causes Axios to enter redirect loops when trying to connect to the LLM Farm API
+
+**Solution**:
+The codebase uses the `tunnel` package instead of Axios's native proxy support:
+
+```typescript
+import * as tunnel from 'tunnel';
+
+// Create tunnel agent for HTTPS-over-HTTP proxy
+const httpsAgent = tunnel.httpsOverHttp({
+  proxy: {
+    host: '127.0.0.1',
+    port: 3128
+  }
+});
+
+// Use in Axios config
+axios.create({
+  httpsAgent,
+  proxy: false  // Disable Axios's built-in proxy
+});
+```
+
+**Requirements**:
+- Local proxy running on port 3128 (e.g., Bosch proxy)
+- Environment variable `https_proxy=http://localhost:3128` set
+- `tunnel` package installed (already in dependencies)
+
+**Verification**:
+Test proxy connection with curl:
+```bash
+curl -x 127.0.0.1:3128 \
+  -H "genaiplatform-farm-subscription-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"input":["test"]}' \
+  "https://aoai-farm.bosch-temp.com/api/openai/deployments/askbosch-prod-farm-openai-text-embedding-3-small/embeddings?api-version=2024-10-21"
+```
+
+### Other Common Issues
+
 **Problem**: "Invalid API key" error
-- **Solution**: Check your `.env` file has valid API keys
+- **Solution**: Check your `.env` file has a valid `LLM_FARM_API_KEY`
+
+**Problem**: "Resource not found" (404) error
+- **Solution**: Verify the API endpoint URL includes `/embeddings` suffix for embedding requests
 
 **Problem**: No embeddings generated
 - **Solution**: Ensure PDFs are in `documents/` folder and are text-based (not image-only)
 
 **Problem**: Out of memory during embedding generation
-- **Solution**: Reduce `chunkSize` or process fewer/smaller documents
+- **Solution**: Reduce `CHUNK_SIZE` or process fewer/smaller documents
 
 **Problem**: Poor answer quality
-- **Solution**: Increase `topK` to retrieve more context chunks, or adjust `chunkSize` for better granularity
+- **Solution**: Increase `TOP_K` to retrieve more context chunks, or adjust `CHUNK_SIZE` for better granularity
 
 ## License
 
