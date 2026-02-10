@@ -15,17 +15,27 @@ import chalk from 'chalk';
  * 4. Queries the LLM and displays responses
  * 5. Continues until user types 'exit' or 'quit'
  *
- * Usage: npm run chat
+ * Usage:
+ *   npm run chat                              (uses 'default' collection)
+ *   npm run chat -- --collection my-project
  */
 async function main(): Promise<void> {
+  // Parse command-line arguments for collection name
+  const args = process.argv.slice(2);
+  const collectionIndex = args.indexOf('--collection');
+  const collectionName = collectionIndex >= 0 && args[collectionIndex + 1]
+    ? args[collectionIndex + 1]
+    : 'default';
+
   console.log(chalk.blue.bold('\nRAG Interactive Chat\n'));
   console.log(chalk.gray('='.repeat(50)));
+  console.log(chalk.white(`Collection: ${collectionName}`));
   console.log(chalk.white('Ask questions about your documents.'));
   console.log(chalk.white(`Type ${chalk.yellow("'exit'")} or ${chalk.yellow("'quit'")} to end the session.\n`));
 
   try {
-    // Initialize dependency injection container
-    const container = new Container();
+    // Initialize dependency injection container with collection name
+    const container = new Container(collectionName);
 
     // Get required services
     const configService = container.getConfigService();
@@ -52,10 +62,14 @@ async function main(): Promise<void> {
     const embeddings = await embeddingStore.load();
 
     if (embeddings.length === 0) {
-      console.log(chalk.red.bold('\nNo embeddings found!'));
+      console.log(chalk.red.bold(`\nNo embeddings found for collection '${collectionName}'!`));
       console.log(chalk.yellow('\nYou need to generate embeddings first:'));
       console.log(chalk.white('  1. Add PDF documents to the documents/ folder'));
-      console.log(chalk.white('  2. Run: npm run generate-embeddings\n'));
+      if (collectionName === 'default') {
+        console.log(chalk.white('  2. Run: npm run generate-embeddings\n'));
+      } else {
+        console.log(chalk.white(`  2. Run: npm run generate-embeddings -- --collection ${collectionName}\n`));
+      }
       process.exit(1);
     }
 

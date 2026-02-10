@@ -14,8 +14,9 @@ export class ConfigService implements IConfigService {
   private readonly topK: number;
   private readonly documentsPath: string;
   private readonly embeddingsPath: string;
+  private readonly chunksPath: string;
 
-  constructor() {
+  constructor(collectionName: string = 'default') {
     // Load environment variables from .env file
     dotenv.config();
 
@@ -34,7 +35,13 @@ export class ConfigService implements IConfigService {
 
     // Load paths with defaults
     this.documentsPath = process.env['DOCUMENTS_PATH'] ?? path.join(projectRoot, 'documents');
-    this.embeddingsPath = process.env['EMBEDDINGS_PATH'] ?? path.join(projectRoot, 'data', 'embeddings.json');
+
+    // Collection-specific paths
+    const collectionsDir = process.env['COLLECTIONS_PATH'] ?? path.join(projectRoot, 'data', 'collections');
+    const chunksDir = process.env['CHUNKS_PATH'] ?? path.join(projectRoot, 'data', 'chunks');
+
+    this.embeddingsPath = path.join(collectionsDir, `${collectionName}.embeddings.json`);
+    this.chunksPath = path.join(chunksDir, `${collectionName}.chunks.json`);
   }
 
   getLlmFarmApiKey(): string {
@@ -59,6 +66,10 @@ export class ConfigService implements IConfigService {
 
   getEmbeddingsPath(): string {
     return this.embeddingsPath;
+  }
+
+  getChunksPath(): string {
+    return this.chunksPath;
   }
 
   /**

@@ -21,9 +21,11 @@ The container instantiates and manages all application services:
 
 ### Dependency Injection
 Services are automatically configured with their dependencies:
+- ConfigService receives collection name for path generation
 - Text Chunker receives chunking configuration from ConfigService
-- Embedding Client receives OpenAI API key from ConfigService
-- LLM Client receives Gemini API key from ConfigService
+- Embedding Client receives LLM Farm API key from ConfigService
+- Embedding Store receives collection-specific file path from ConfigService
+- LLM Client receives LLM Farm API key from ConfigService
 
 ### Singleton Pattern
 Each service is instantiated once and reused across the application.
@@ -33,13 +35,17 @@ Each service is instantiated once and reused across the application.
 ```typescript
 import { createContainer } from './di/index.js';
 
-// Create container (automatically loads config and instantiates services)
+// Create container with default collection
 const container = createContainer();
+
+// Create container for specific collection
+const containerProjectA = createContainer('project-a');
 
 // Access services
 const configService = container.getConfigService();
 const textChunker = container.getTextChunker();
 const embeddingClient = container.getEmbeddingClient();
+const embeddingStore = container.getEmbeddingStore(); // Collection-specific
 const llmClient = container.getLlmClient();
 const documentReader = container.getDocumentReader();
 const progressReporter = container.getProgressReporter();
@@ -47,12 +53,15 @@ const progressReporter = container.getProgressReporter();
 
 ## Service Initialization Order
 
-1. **ConfigService** - Loaded first to provide configuration
+1. **ConfigService** - Loaded first with optional collectionName parameter
 2. **DocumentReader** - No dependencies
 3. **ProgressReporter** - No dependencies
-4. **TextChunker** - Configured with chunkSize and chunkOverlap
-5. **EmbeddingClient** - Configured with OpenAI API key
-6. **LLmClient** - Configured with Gemini API key
+4. **VectorSearch** - No dependencies
+5. **PromptBuilder** - No dependencies
+6. **TextChunker** - Configured with chunkSize and chunkOverlap from ConfigService
+7. **EmbeddingClient** - Configured with LLM Farm API key from ConfigService
+8. **EmbeddingStore** - Configured with collection-specific path from ConfigService
+9. **LlmClient** - Configured with LLM Farm API key from ConfigService
 
 ## Error Handling
 

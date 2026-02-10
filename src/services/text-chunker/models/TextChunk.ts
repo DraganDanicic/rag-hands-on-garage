@@ -20,6 +20,11 @@ export interface TextChunk {
   chunkIndex: number;
 
   /**
+   * Unique identifier for this chunk, generated from content hash
+   */
+  chunkId?: string;
+
+  /**
    * Additional metadata
    */
   metadata?: {

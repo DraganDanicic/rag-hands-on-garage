@@ -32,4 +32,9 @@ export interface IConfigService {
    * Get path to embeddings storage file
    */
   getEmbeddingsPath(): string;
+
+  /**
+   * Get path to chunks storage file
+   */
+  getChunksPath(): string;
 }

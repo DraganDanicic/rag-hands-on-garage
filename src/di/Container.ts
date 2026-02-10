@@ -25,9 +25,9 @@ export class Container implements IContainer {
   private readonly vectorSearch: IVectorSearch;
   private readonly promptBuilder: IPromptBuilder;
 
-  constructor() {
-    // Initialize configuration service first
-    this.configService = createConfigService();
+  constructor(collectionName: string = 'default') {
+    // Initialize configuration service first with collection name
+    this.configService = createConfigService(collectionName);
 
     // Initialize services that don't need configuration
     this.documentReader = createDocumentReader();

@@ -33,13 +33,14 @@ The system follows an isolated service architecture where:
 ### Key Components
 
 1. **Document Reader** - Reads and extracts text from PDF files
-2. **Text Chunker** - Splits text into chunks with configurable overlap
+2. **Text Chunker** - Splits text into chunks with SHA-256 hash IDs for deduplication
 3. **Embedding Client** - Generates vector embeddings via Bosch LLM Farm API
-4. **Embedding Store** - Stores and retrieves embeddings from JSON files
+4. **Embedding Store** - Stores/retrieves embeddings with incremental save and resume support
 5. **Vector Search** - Finds similar chunks using cosine similarity
 6. **LLM Client** - Communicates with Bosch LLM Farm API
 7. **Prompt Builder** - Constructs RAG prompts with context
 8. **Progress Reporter** - Displays console progress output
+9. **Config Service** - Manages configuration with collection support
 
 ## Setup Instructions
 
@@ -70,7 +71,8 @@ Add these optional environment variables to your `.env` file:
 - `CHUNK_OVERLAP`: Characters to overlap between chunks (default: 50)
 - `TOP_K`: Number of chunks to retrieve during queries (default: 3)
 - `DOCUMENTS_PATH`: Path to documents folder (default: ./documents)
-- `EMBEDDINGS_PATH`: Path to embeddings file (default: ./data/embeddings.json)
+- `COLLECTIONS_PATH`: Path to collections directory (default: ./data/collections)
+- `CHUNKS_PATH`: Path to chunks directory (default: ./data/chunks)
 
 ## Usage Workflow
 
@@ -97,42 +99,105 @@ cp your-document.pdf documents/
 Process your PDFs and create embeddings:
 
 ```bash
+# Default collection
 npm run generate-embeddings
+
+# Specific collection (for organizing different document sets)
+npm run generate-embeddings -- --collection project-a
 ```
 
 This will:
 - Read all PDFs from the `documents/` folder
-- Split text into chunks based on configuration
+- Split text into chunks with unique SHA-256 hash IDs
+- Save chunks to `data/chunks/{collection}.chunks.json` for inspection
+- Check for existing embeddings (resume capability)
 - Generate embeddings using Bosch LLM Farm API
-- Store embeddings in `data/embeddings.json`
+- Save incrementally every 50 chunks to `data/collections/{collection}.embeddings.json`
 - Display progress in the console
+
+**Resume Capability**: If interrupted, re-run the same command. Already-processed chunks are automatically skipped.
 
 ### Step 4: Start Chat Interface
 
 Run the interactive chat interface:
 
 ```bash
+# Default collection
 npm run chat
+
+# Specific collection
+npm run chat -- --collection project-a
 ```
 
 Ask questions about your documents:
 ```
-> What is the main topic of the document?
-> Explain the key concepts discussed
-> exit
+Collection: default
+Ask questions about your documents.
+Type 'exit' or 'quit' to end the session.
+
+You: What is the main topic of the document?
+Assistant: [Answer based on your documents]
+
+You: Explain the key concepts discussed
+Assistant: [Answer with context from retrieved chunks]
+
+You: exit
+Goodbye!
 ```
 
 Type `exit` or `quit` to end the session.
+
+## Key Features
+
+### Document Collections
+Organize embeddings by project or context to keep unrelated document sets separate:
+- **Default collection**: No `--collection` flag needed
+- **Named collections**: Use `--collection project-name` for specific document sets
+- **Isolated storage**: Each collection has its own embeddings and chunks files
+- **Easy switching**: Change collection via CLI argument when chatting
+
+### Resume Capability
+Interrupted embedding generation can resume without re-processing:
+- **Chunk IDs**: Each chunk gets a unique SHA-256 hash based on its text
+- **Automatic skip**: Already-processed chunks detected by ID and skipped
+- **Progress preserved**: Re-run the same command to continue where you left off
+- **Cost savings**: No wasted API calls on duplicate processing
+
+### Incremental Saving
+Prevent data loss during long embedding generation runs:
+- **Checkpoint saves**: Embeddings saved every 50 chunks
+- **Atomic writes**: File corruption prevented via temp file + rename
+- **Merge logic**: New embeddings merged with existing ones by chunk ID
+- **Memory efficient**: Don't hold all embeddings in memory
+
+### Chunk Inspection
+Debug and understand your chunking strategy:
+- **Human-readable format**: `chunks/{collection}.chunks.json` contains all text chunks
+- **Complete metadata**: Includes chunk ID, text, positions, source document
+- **Useful for tuning**: Review how documents are split to optimize chunk size/overlap
 
 ## How It Works
 
 ### Embedding Generation Flow (IndexingWorkflow)
 
+```
+PDFs → DocumentReader → TextChunker → [Checkpoint] → EmbeddingClient → EmbeddingStore
+                            ↓                              ↓               ↓
+                    Generate ChunkIDs               Generate Vectors    Incremental Save
+                    Save chunks.json                (LLM Farm API)      (every 50 chunks)
+                            ↓
+                    Check Existing IDs
+                    Skip Processed Chunks
+```
+
 1. **Read PDFs** - Extract text from PDF files
-2. **Chunk Text** - Split into overlapping segments
-3. **Generate Embeddings** - Call LLM Farm API for each chunk
-4. **Store** - Save embeddings to local JSON file
-5. **Report Progress** - Display status in console
+2. **Chunk Text** - Split into overlapping segments with SHA-256 hash IDs
+3. **Save Chunks** - Export to `chunks/{collection}.chunks.json` for inspection
+4. **Resume Check** - Load existing embeddings, build Set of processed chunk IDs
+5. **Skip Processed** - Filter out chunks that already have embeddings
+6. **Generate Embeddings** - Call LLM Farm API for new chunks only
+7. **Incremental Save** - Save every 50 chunks to prevent data loss
+8. **Report Progress** - Display status with existing/new/skipped counts
 
 ### Query Flow (QueryWorkflow)
 
@@ -149,24 +214,84 @@ rag-hands-on-garage/
 ├── src/
 │   ├── services/          # Isolated service modules
 │   │   ├── document-reader/
-│   │   ├── text-chunker/
+│   │   ├── text-chunker/      # Now generates SHA-256 chunk IDs
+│   │   │   └── utils/         # chunkId.ts hash generation
 │   │   ├── embedding-client/
-│   │   ├── embedding-store/
+│   │   ├── embedding-store/   # Now supports incremental save
 │   │   ├── vector-search/
 │   │   ├── llm-client/
 │   │   ├── prompt-builder/
 │   │   └── progress-reporter/
-│   ├── workflows/         # IndexingWorkflow & QueryWorkflow
-│   ├── config/           # ConfigService
-│   ├── di/               # Dependency injection Container
-│   └── cli/              # CLI entry points (3 commands)
-├── documents/            # Input PDFs (add your files here)
-├── data/                 # Generated embeddings
-├── tests/                # Unit and integration tests
+│   ├── workflows/             # IndexingWorkflow & QueryWorkflow
+│   ├── config/                # ConfigService (collection-aware)
+│   ├── di/                    # Dependency injection Container
+│   └── cli/                   # CLI entry points with --collection support
+├── documents/                 # Input PDFs (add your files here)
+├── data/
+│   ├── collections/           # Embeddings organized by collection
+│   │   ├── default.embeddings.json
+│   │   └── {collection}.embeddings.json
+│   └── chunks/                # Human-readable chunks for inspection
+│       ├── default.chunks.json
+│       └── {collection}.chunks.json
+├── tests/                     # Unit and integration tests
 ├── package.json
 ├── tsconfig.json
 ├── README.md
 └── CLAUDE.md             # Development guide
+```
+
+## Common Use Cases
+
+### Single Project Workflow
+```bash
+# Add PDFs to documents/
+cp *.pdf documents/
+
+# Generate embeddings (uses 'default' collection)
+npm run generate-embeddings
+
+# Chat with documents
+npm run chat
+```
+
+### Multi-Project Workflow
+```bash
+# Process Project A documents
+npm run generate-embeddings -- --collection project-a
+
+# Process Project B documents (replace PDFs in documents/ folder first)
+npm run generate-embeddings -- --collection project-b
+
+# Chat with Project A
+npm run chat -- --collection project-a
+
+# Chat with Project B
+npm run chat -- --collection project-b
+```
+
+### Resume After Interruption
+```bash
+# Start embedding generation
+npm run generate-embeddings -- --collection large-dataset
+
+# Process crashes at chunk 532 / 1074
+# (50, 100, 150... 500 chunks already saved)
+
+# Resume - skips first 500 chunks, continues from 501
+npm run generate-embeddings -- --collection large-dataset
+# Output: "Resume: Found 500 existing embeddings"
+# Continues processing from chunk 501
+```
+
+### Inspect Chunking Results
+```bash
+# Generate embeddings
+npm run generate-embeddings
+
+# View chunks in JSON format
+cat data/chunks/default.chunks.json | jq '.[0:5]'  # First 5 chunks
+cat data/chunks/default.chunks.json | jq '.[] | select(.metadata.sourceDocument == "my-doc.pdf")'
 ```
 
 ## Development
@@ -207,7 +332,8 @@ All configuration is managed via environment variables (`ConfigService`):
 - `CHUNK_OVERLAP`: Overlap between chunks (default: 50)
 - `TOP_K`: Number of chunks to retrieve (default: 3)
 - `DOCUMENTS_PATH`: Path to documents folder (default: ./documents)
-- `EMBEDDINGS_PATH`: Path to embeddings JSON file (default: ./data/embeddings.json)
+- `COLLECTIONS_PATH`: Path to collections directory (default: ./data/collections)
+- `CHUNKS_PATH`: Path to chunks directory (default: ./data/chunks)
 
 ## Learning Outcomes
 

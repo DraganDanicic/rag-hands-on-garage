@@ -11,7 +11,7 @@ interface ITextChunker {
 ```
 
 ## Models
-- **TextChunk**: Contains chunk text, position index, start/end character positions
+- **TextChunk**: Contains chunk text, position index, start/end character positions, and unique SHA-256 hash ID
 - **ChunkingConfig**: Immutable configuration with chunkSize and chunkOverlap properties
 
 ## Dependencies (Injected)
@@ -36,6 +36,11 @@ chunks.forEach((chunk, i) => {
 - Maintains chunk order with position index
 - Last chunk may be smaller than chunkSize
 - Does not attempt to break on word/sentence boundaries (simple implementation)
+- **Chunk ID Generation**: Each chunk automatically receives a unique SHA-256 hash ID based on its text content
+  - Deterministic: Same text = same ID
+  - Enables deduplication: Identical chunks across documents share the same embedding
+  - Supports resume: Already-processed chunks can be skipped by ID
+  - Implementation: `utils/chunkId.ts` using Node.js crypto module
 
 ## Testing Considerations
 - Test with various chunk sizes and overlap values

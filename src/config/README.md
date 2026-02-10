@@ -14,27 +14,38 @@ The configuration service provides centralized access to all application configu
 Automatically loads configuration from environment variables using `dotenv`.
 
 ### Required Configuration
-- `OPENAI_API_KEY` - OpenAI API key for embeddings (required)
-- `GEMINI_API_KEY` - Google Gemini API key for LLM (required)
+- `LLM_FARM_API_KEY` - Bosch LLM Farm API key for embeddings and LLM (required)
 
 ### Optional Configuration with Defaults
 - `CHUNK_SIZE` - Text chunk size in characters (default: 500)
 - `CHUNK_OVERLAP` - Overlap between chunks in characters (default: 50)
 - `TOP_K` - Number of chunks to retrieve for RAG (default: 3)
 - `DOCUMENTS_PATH` - Path to documents folder (default: `./documents`)
-- `EMBEDDINGS_PATH` - Path to embeddings storage file (default: `./data/embeddings.json`)
+- `COLLECTIONS_PATH` - Path to collections directory (default: `./data/collections`)
+- `CHUNKS_PATH` - Path to chunks directory (default: `./data/chunks`)
+
+### Collection-Specific Paths
+The ConfigService accepts an optional `collectionName` parameter (defaults to 'default'):
+- Embeddings: `{COLLECTIONS_PATH}/{collectionName}.embeddings.json`
+- Chunks: `{CHUNKS_PATH}/{collectionName}.chunks.json`
 
 ## Usage
 
 ```typescript
 import { createConfigService } from './config/index.js';
 
+// Default collection
 const config = createConfigService();
 
+// Specific collection
+const configProjectA = createConfigService('project-a');
+
 // Access configuration values
-const apiKey = config.getOpenAiApiKey();
+const apiKey = config.getLlmFarmApiKey();
 const chunkSize = config.getChunkSize();
 const topK = config.getTopK();
+const embeddingsPath = config.getEmbeddingsPath(); // ./data/collections/default.embeddings.json
+const chunksPath = config.getChunksPath(); // ./data/chunks/default.chunks.json
 ```
 
 ## Error Handling

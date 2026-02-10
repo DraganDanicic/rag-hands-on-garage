@@ -1,6 +1,7 @@
 import { ITextChunker } from './ITextChunker.js';
 import { TextChunk } from './models/TextChunk.js';
 import { ChunkingConfig } from './models/ChunkingConfig.js';
+import { generateChunkId } from './utils/chunkId.js';
 
 export class TextChunker implements ITextChunker {
   constructor(private config: ChunkingConfig) {
@@ -35,12 +36,16 @@ export class TextChunker implements ITextChunker {
       // Extract the chunk text
       const chunkText = text.substring(startPosition, endPosition);
 
+      // Generate unique ID for this chunk
+      const chunkId = generateChunkId(chunkText);
+
       // Create the chunk object
       chunks.push({
         text: chunkText,
         startPosition,
         endPosition,
         chunkIndex,
+        chunkId,
         metadata: {
           sourceDocument,
           totalChunks: 0, // Will be updated after all chunks are created

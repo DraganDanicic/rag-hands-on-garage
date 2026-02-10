@@ -8,6 +8,13 @@ export interface IEmbeddingStore {
   save(embeddings: StoredEmbedding[]): Promise<void>;
 
   /**
+   * Save embeddings incrementally by merging with existing ones
+   * Existing embeddings with the same chunkId will be overwritten
+   * @param embeddings - Array of embeddings to add/update
+   */
+  saveIncremental(embeddings: StoredEmbedding[]): Promise<void>;
+
+  /**
    * Load all embeddings from storage
    * @returns Array of stored embeddings
    */

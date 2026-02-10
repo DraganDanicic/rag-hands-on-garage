@@ -11,17 +11,28 @@ import chalk from 'chalk';
  * 1. Reads all PDFs from the documents/ folder
  * 2. Chunks the text content
  * 3. Generates embeddings using OpenAI API
- * 4. Stores embeddings in data/embeddings.json
+ * 4. Stores embeddings in data/collections/{collection}.embeddings.json
  *
- * Usage: npm run generate-embeddings
+ * Usage:
+ *   npm run generate-embeddings                    (uses 'default' collection)
+ *   npm run generate-embeddings -- --collection my-project
  */
 async function main(): Promise<void> {
+  // Parse command-line arguments for collection name
+  const args = process.argv.slice(2);
+  const collectionIndex = args.indexOf('--collection');
+  const collectionName = collectionIndex >= 0 && args[collectionIndex + 1]
+    ? args[collectionIndex + 1]
+    : 'default';
+
   console.log(chalk.blue.bold('\nRAG Document Indexing\n'));
+  console.log(chalk.gray('='.repeat(50)));
+  console.log(chalk.white(`Collection: ${collectionName}`));
   console.log(chalk.gray('='.repeat(50)));
 
   try {
-    // Initialize dependency injection container
-    const container = new Container();
+    // Initialize dependency injection container with collection name
+    const container = new Container(collectionName);
 
     // Get required services
     const configService = container.getConfigService();
@@ -46,9 +57,15 @@ async function main(): Promise<void> {
     // Display summary
     console.log(chalk.gray('\n' + '='.repeat(50)));
     console.log(chalk.green.bold('\nIndexing Summary:'));
-    console.log(chalk.white(`  Total embeddings generated: ${embeddingCount}`));
-    console.log(chalk.white(`  Storage location: ${configService.getEmbeddingsPath()}`));
-    console.log(chalk.green('\nYou can now run the chat interface with: npm run chat\n'));
+    console.log(chalk.white(`  Collection: ${collectionName}`));
+    console.log(chalk.white(`  Total embeddings: ${embeddingCount}`));
+    console.log(chalk.white(`  Embeddings: ${configService.getEmbeddingsPath()}`));
+    console.log(chalk.white(`  Chunks: ${configService.getChunksPath()}`));
+    if (collectionName === 'default') {
+      console.log(chalk.green('\nYou can now run the chat interface with: npm run chat\n'));
+    } else {
+      console.log(chalk.green(`\nYou can now run the chat interface with: npm run chat -- --collection ${collectionName}\n`));
+    }
   } catch (error) {
     console.error(chalk.red.bold('\nError during indexing:'));
 

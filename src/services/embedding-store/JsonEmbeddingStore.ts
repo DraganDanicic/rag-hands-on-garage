@@ -50,6 +50,49 @@ export class JsonEmbeddingStore implements IEmbeddingStore {
     }
   }
 
+  async saveIncremental(embeddings: StoredEmbedding[]): Promise<void> {
+    if (!Array.isArray(embeddings)) {
+      throw new Error('embeddings must be an array');
+    }
+
+    // Load existing embeddings
+    const existingEmbeddings = await this.load();
+
+    // Create a map of chunkId -> embedding for efficient lookup and merge
+    const embeddingMap = new Map<string, StoredEmbedding>();
+
+    // Add existing embeddings to map
+    for (const embedding of existingEmbeddings) {
+      const chunkId = embedding.metadata?.chunkId as string | undefined;
+      if (chunkId) {
+        embeddingMap.set(chunkId, embedding);
+      } else {
+        // Keep embeddings without chunkId (backward compatibility)
+        // Use a unique temporary key based on text + vector to avoid collisions
+        const tempKey = `legacy_${embedding.text.substring(0, 50)}_${embedding.vector[0]}`;
+        embeddingMap.set(tempKey, embedding);
+      }
+    }
+
+    // Add/overwrite with new embeddings
+    for (const embedding of embeddings) {
+      const chunkId = embedding.metadata?.chunkId as string | undefined;
+      if (chunkId) {
+        embeddingMap.set(chunkId, embedding);
+      } else {
+        // If new embedding doesn't have chunkId, still add it
+        const tempKey = `legacy_${embedding.text.substring(0, 50)}_${embedding.vector[0]}`;
+        embeddingMap.set(tempKey, embedding);
+      }
+    }
+
+    // Convert map back to array
+    const mergedEmbeddings = Array.from(embeddingMap.values());
+
+    // Save using the existing save method (which includes validation and atomic write)
+    await this.save(mergedEmbeddings);
+  }
+
   async load(): Promise<StoredEmbedding[]> {
     try {
       const data = await fs.readFile(this.filePath, 'utf-8');
