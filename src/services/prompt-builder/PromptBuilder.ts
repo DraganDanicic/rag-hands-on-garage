@@ -1,5 +1,7 @@
 import { IPromptBuilder } from './IPromptBuilder.js';
 import { PromptTemplate } from './models/PromptTemplate.js';
+import { ITemplateLoader } from '../template-loader/ITemplateLoader.js';
+import { IConfigService } from '../../config/IConfigService.js';
 
 const DEFAULT_TEMPLATE: PromptTemplate = {
   template: `You are a helpful assistant. Answer the user's question based on the provided context.
@@ -19,8 +21,52 @@ Answer:`,
 };
 
 export class PromptBuilder implements IPromptBuilder {
+  private template: PromptTemplate;
+  private initialized: boolean = false;
+
+  constructor(
+    private readonly templateLoader: ITemplateLoader,
+    private readonly config: IConfigService
+  ) {
+    this.template = DEFAULT_TEMPLATE;
+  }
+
+  async initialize(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    const templatePath = this.config.getPromptTemplatePath();
+    const templateName = this.config.getPromptTemplate();
+
+    if (templatePath || templateName) {
+      // Use custom or built-in template
+      const nameOrPath = templatePath || templateName || 'default';
+      try {
+        this.template = await this.templateLoader.loadTemplate(nameOrPath);
+      } catch (error) {
+        console.warn(
+          `Failed to load template '${nameOrPath}': ${error instanceof Error ? error.message : String(error)}. ` +
+          `Using default template.`
+        );
+        this.template = DEFAULT_TEMPLATE;
+      }
+    } else {
+      // Use default template
+      this.template = DEFAULT_TEMPLATE;
+    }
+
+    this.initialized = true;
+  }
+
   buildPrompt(question: string, contexts: string[]): string {
-    return this.buildPromptWithTemplate(question, contexts, DEFAULT_TEMPLATE);
+    if (!this.initialized) {
+      throw new Error(
+        'PromptBuilder not initialized. Call initialize() before using buildPrompt().'
+      );
+    }
+
+    return this.buildPromptWithTemplate(question, contexts, this.template);
   }
 
   buildPromptWithTemplate(

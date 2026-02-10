@@ -7,12 +7,19 @@ import { IProgressReporter } from '../services/progress-reporter/IProgressReport
 import { IEmbeddingStore } from '../services/embedding-store/IEmbeddingStore.js';
 import { IVectorSearch } from '../services/vector-search/IVectorSearch.js';
 import { IPromptBuilder } from '../services/prompt-builder/IPromptBuilder.js';
+import { ICollectionManager } from '../services/collection-manager/ICollectionManager.js';
+import { IErrorHandler } from '../services/error-handler/IErrorHandler.js';
 
 /**
  * Dependency Injection Container interface
  * Provides access to all configured services
  */
 export interface IContainer {
+  /**
+   * Initialize async services (must be called before using services)
+   */
+  initialize(): Promise<void>;
+
   /**
    * Get the configuration service instance
    */
@@ -57,4 +64,14 @@ export interface IContainer {
    * Get the prompt builder service instance
    */
   getPromptBuilder(): IPromptBuilder;
+
+  /**
+   * Get the collection manager service instance
+   */
+  getCollectionManager(): ICollectionManager;
+
+  /**
+   * Get the error handler service instance
+   */
+  getErrorHandler(): IErrorHandler;
 }

@@ -2,29 +2,50 @@ import axios, { AxiosInstance } from 'axios';
 import * as tunnel from 'tunnel';
 import { IEmbeddingClient } from './IEmbeddingClient.js';
 
+export interface EmbeddingClientConfig {
+  model?: string;
+  maxRetries?: number;
+  retryDelayMs?: number;
+  timeoutMs?: number;
+  proxyEnabled?: boolean;
+  proxyHost?: string;
+  proxyPort?: number;
+}
+
 export class LlmFarmEmbeddingClient implements IEmbeddingClient {
   private client: AxiosInstance;
-  private readonly model = 'askbosch-prod-farm-openai-text-embedding-3-small';
-  private readonly maxRetries = 3;
-  private readonly retryDelay = 1000; // 1 second
+  private readonly model: string;
+  private readonly maxRetries: number;
+  private readonly retryDelay: number;
 
-  constructor(private readonly apiKey: string) {
+  constructor(
+    private readonly apiKey: string,
+    config: EmbeddingClientConfig = {}
+  ) {
     if (!apiKey || apiKey.trim().length === 0) {
       throw new Error('LLM Farm API key is required');
     }
 
+    // Apply configuration with defaults
+    this.model = config.model ?? 'askbosch-prod-farm-openai-text-embedding-3-small';
+    this.maxRetries = config.maxRetries ?? 3;
+    this.retryDelay = config.retryDelayMs ?? 1000;
+    const timeout = config.timeoutMs ?? 30000;
+    const proxyEnabled = config.proxyEnabled ?? (process.env.https_proxy || process.env.HTTPS_PROXY ? true : false);
+    const proxyHost = config.proxyHost ?? '127.0.0.1';
+    const proxyPort = config.proxyPort ?? 3128;
+
     // Configure proxy using tunnel package (Axios native proxy has issues with Bosch network)
     // The tunnel package properly handles HTTPS over HTTP proxy connections
-    const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY;
-    const httpsAgent = proxyUrl ? tunnel.httpsOverHttp({
+    const httpsAgent = proxyEnabled ? tunnel.httpsOverHttp({
       proxy: {
-        host: '127.0.0.1',
-        port: 3128
+        host: proxyHost,
+        port: proxyPort
       }
     }) : undefined;
 
     this.client = axios.create({
-      baseURL: 'https://aoai-farm.bosch-temp.com/api/openai/deployments/askbosch-prod-farm-openai-text-embedding-3-small/embeddings',
+      baseURL: `https://aoai-farm.bosch-temp.com/api/openai/deployments/${this.model}/embeddings`,
       headers: {
         'genaiplatform-farm-subscription-key': this.apiKey,
         'Content-Type': 'application/json',
@@ -32,7 +53,7 @@ export class LlmFarmEmbeddingClient implements IEmbeddingClient {
       params: {
         'api-version': '2024-10-21',
       },
-      timeout: 30000, // 30 seconds
+      timeout,
       httpsAgent, // Use tunnel agent for proxy support
       proxy: false, // Disable Axios's built-in proxy (doesn't work with this setup)
     });

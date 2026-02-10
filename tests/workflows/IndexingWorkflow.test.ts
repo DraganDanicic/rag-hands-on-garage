@@ -18,6 +18,15 @@ import { IEmbeddingStore } from '../../src/services/embedding-store/IEmbeddingSt
 import { IProgressReporter } from '../../src/services/progress-reporter/IProgressReporter.js';
 import { Document } from '../../src/services/document-reader/models/Document.js';
 import { TextChunk } from '../../src/services/text-chunker/models/TextChunk.js';
+import { promises as fs } from 'fs';
+
+// Mock fs module
+jest.mock('fs', () => ({
+  promises: {
+    mkdir: jest.fn(),
+    writeFile: jest.fn(),
+  },
+}));
 
 describe('IndexingWorkflow', () => {
   let mockConfigService: jest.Mocked<IConfigService>;
@@ -33,12 +42,28 @@ describe('IndexingWorkflow', () => {
     mockConfigService = {
       getDocumentsPath: jest.fn(() => '/path/to/documents'),
       getEmbeddingsPath: jest.fn(() => '/path/to/embeddings.json'),
+      getChunksPath: jest.fn(() => '/path/to/chunks.json'),
       getOpenAiApiKey: jest.fn(() => 'test-key'),
       getGeminiApiKey: jest.fn(() => 'test-key'),
       getLlmFarmApiKey: jest.fn(() => 'test-key'),
       getChunkSize: jest.fn(() => 500),
       getChunkOverlap: jest.fn(() => 50),
       getTopK: jest.fn(() => 3),
+      getLlmModel: jest.fn(() => 'gemini-2.0-flash-lite'),
+      getLlmTemperature: jest.fn(() => 0.7),
+      getLlmMaxTokens: jest.fn(() => 2048),
+      getEmbeddingModel: jest.fn(() => 'text-embedding-3-small'),
+      getPromptTemplatePath: jest.fn(() => undefined),
+      getPromptTemplate: jest.fn(() => undefined),
+      getPromptsPath: jest.fn(() => './prompts'),
+      getCheckpointInterval: jest.fn(() => 50),
+      getMaxRetries: jest.fn(() => 3),
+      getRetryDelayMs: jest.fn(() => 1000),
+      getEmbeddingApiTimeoutMs: jest.fn(() => 30000),
+      getLlmApiTimeoutMs: jest.fn(() => 60000),
+      isProxyEnabled: jest.fn(() => false),
+      getProxyHost: jest.fn(() => '127.0.0.1'),
+      getProxyPort: jest.fn(() => 3128),
     } as jest.Mocked<IConfigService>;
 
     mockDocumentReader = {
@@ -58,6 +83,7 @@ describe('IndexingWorkflow', () => {
 
     mockEmbeddingStore = {
       save: jest.fn(),
+      saveIncremental: jest.fn(),
       load: jest.fn(),
       clear: jest.fn(),
     } as jest.Mocked<IEmbeddingStore>;

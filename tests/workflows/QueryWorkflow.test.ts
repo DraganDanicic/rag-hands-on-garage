@@ -36,11 +36,27 @@ describe('QueryWorkflow', () => {
       getTopK: jest.fn(() => 3),
       getDocumentsPath: jest.fn(() => '/docs'),
       getEmbeddingsPath: jest.fn(() => '/embeddings.json'),
+      getChunksPath: jest.fn(() => '/chunks.json'),
       getOpenAiApiKey: jest.fn(() => 'test-key'),
       getGeminiApiKey: jest.fn(() => 'test-key'),
       getLlmFarmApiKey: jest.fn(() => 'test-key'),
       getChunkSize: jest.fn(() => 500),
       getChunkOverlap: jest.fn(() => 50),
+      getLlmModel: jest.fn(() => 'gemini-2.0-flash-lite'),
+      getLlmTemperature: jest.fn(() => 0.7),
+      getLlmMaxTokens: jest.fn(() => 2048),
+      getEmbeddingModel: jest.fn(() => 'text-embedding-3-small'),
+      getPromptTemplatePath: jest.fn(() => undefined),
+      getPromptTemplate: jest.fn(() => undefined),
+      getPromptsPath: jest.fn(() => './prompts'),
+      getCheckpointInterval: jest.fn(() => 50),
+      getMaxRetries: jest.fn(() => 3),
+      getRetryDelayMs: jest.fn(() => 1000),
+      getEmbeddingApiTimeoutMs: jest.fn(() => 30000),
+      getLlmApiTimeoutMs: jest.fn(() => 60000),
+      isProxyEnabled: jest.fn(() => false),
+      getProxyHost: jest.fn(() => '127.0.0.1'),
+      getProxyPort: jest.fn(() => 3128),
     } as jest.Mocked<IConfigService>;
 
     mockEmbeddingClient = {
@@ -51,6 +67,7 @@ describe('QueryWorkflow', () => {
     mockEmbeddingStore = {
       load: jest.fn(),
       save: jest.fn(),
+      saveIncremental: jest.fn(),
       clear: jest.fn(),
     } as jest.Mocked<IEmbeddingStore>;
 
@@ -59,6 +76,7 @@ describe('QueryWorkflow', () => {
     } as jest.Mocked<IVectorSearch>;
 
     mockPromptBuilder = {
+      initialize: jest.fn(),
       buildPrompt: jest.fn(),
       buildPromptWithTemplate: jest.fn(),
     } as jest.Mocked<IPromptBuilder>;

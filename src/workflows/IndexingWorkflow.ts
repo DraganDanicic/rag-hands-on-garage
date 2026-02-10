@@ -17,8 +17,6 @@ import path from 'path';
  * 4. Storing embeddings to persistent storage
  */
 export class IndexingWorkflow {
-  private static readonly CHECKPOINT_INTERVAL = 50;
-
   constructor(
     private readonly configService: IConfigService,
     private readonly documentReader: IDocumentReader,
@@ -134,7 +132,8 @@ export class IndexingWorkflow {
           newCount++;
 
           // Incremental save every N chunks
-          if (storedEmbeddings.length >= IndexingWorkflow.CHECKPOINT_INTERVAL) {
+          const checkpointInterval = this.configService.getCheckpointInterval();
+          if (storedEmbeddings.length >= checkpointInterval) {
             this.progressReporter.info(
               `Checkpoint: Saving ${storedEmbeddings.length} embeddings...`
             );

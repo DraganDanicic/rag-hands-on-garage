@@ -36,6 +36,7 @@ async function main(): Promise<void> {
   try {
     // Initialize dependency injection container with collection name
     const container = new Container(collectionName);
+    await container.initialize();
 
     // Get required services
     const configService = container.getConfigService();

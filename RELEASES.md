@@ -5,6 +5,94 @@ All notable changes documented following [Keep a Changelog](https://keepachangel
 ## [Unreleased]
 <!-- Future changes go here -->
 
+## [1.2.0] - 2026-02-10
+
+### Added
+- **Professional CLI Framework**: Complete CLI rewrite using commander.js with 5 major commands
+  - `rag-garage generate` - Generate embeddings with collection support
+  - `rag-garage chat` - Interactive chat with collection support
+  - `rag-garage collections` - Collection management (list, info, delete)
+  - `rag-garage config` - Configuration management (show, validate)
+  - `rag-garage status` - System health and API connectivity checks
+- **Enhanced Configuration System**: 20+ new ConfigService methods for full environment control
+  - LLM configuration (model, temperature, max tokens)
+  - Embedding configuration (model name)
+  - Prompt template system (built-in or custom)
+  - Performance & reliability (checkpoint interval, retries, timeouts)
+  - Proxy configuration (enable/disable, host, port)
+- **Prompt Template System**: Four built-in templates (default, concise, detailed, technical)
+  - TemplateLoader service for built-in and custom templates
+  - Async PromptBuilder initialization
+  - Template validation for required placeholders
+- **CollectionManager Service**: Programmatic collection management
+  - List collections with metadata (count, size, dates)
+  - Get detailed collection information
+  - Delete collections
+  - Check collection existence
+- **ErrorHandler Service**: Context-aware error handling with 15+ error patterns
+  - Pattern matching for common errors (API key, network, rate limit, etc.)
+  - Specific troubleshooting tips and suggested commands
+  - Integration across all CLI commands
+- **Comprehensive Documentation**:
+  - Complete .env.example with 120+ lines
+  - UX_ENHANCEMENTS_SUMMARY.md
+  - CLI_IMPLEMENTATION_SUMMARY.md
+  - ERROR_HANDLER_SUMMARY.md
+  - CUSTOMIZE_PROMPT.md
+  - RELEASE_PROCESS.md
+
+### Changed
+- CLI entry point moved from npm scripts to `rag-garage` command
+- All hardcoded values now configurable via .env
+- LlmFarmLlmClient and LlmFarmEmbeddingClient accept full configuration objects
+- Container initialization now async to support service setup
+- PromptBuilder requires async initialize() call before use
+- Error messages now context-specific instead of generic
+
+### Fixed
+- Removed hardcoded temperature (0.7) in QueryWorkflow
+- Removed hardcoded checkpoint interval (50) in IndexingWorkflow
+- Improved error messages for missing API keys
+- Better validation for numeric configuration values
+
+### Performance
+- Configurable API timeouts prevent hanging on slow networks
+- Configurable retry settings optimize resilience vs speed
+- Configurable checkpoint interval balances save frequency vs performance
+
+### Migration Guide
+```bash
+# Update .env file with new optional settings
+# Copy values from .env.example for full configuration control
+
+# Optional: Add prompt template configuration
+PROMPT_TEMPLATE=concise  # or detailed, technical, custom file path
+
+# Optional: Customize LLM behavior
+LLM_TEMPERATURE=0.7
+LLM_MAX_TOKENS=2048
+
+# Optional: Adjust performance settings
+CHECKPOINT_INTERVAL=50
+MAX_RETRIES=3
+RETRY_DELAY_MS=1000
+
+# CLI commands now use rag-garage instead of npm scripts
+# Old: npm run generate-embeddings
+# New: rag-garage generate
+
+# Old: npm run chat
+# New: rag-garage chat
+
+# New commands available:
+rag-garage collections list
+rag-garage config show
+rag-garage config validate
+rag-garage status
+```
+
+**Commit:** [View changes](../../commit/HEAD)
+
 ## [1.1.0] - 2026-02-09
 
 ### Added

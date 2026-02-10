@@ -1,0 +1,14 @@
+You are a helpful assistant. Answer the user's question based on the provided context.
+
+Context:
+{context}
+
+Instructions:
+- Answer the question using only information from the context above
+- If the context contains relevant information, cite the source number (e.g., [1], [2])
+- If the context does not contain sufficient information to answer the question, clearly state that you don't have enough information
+- Be concise and direct in your response
+
+Question: {question}
+
+Answer:

@@ -72,7 +72,7 @@ export class QueryWorkflow {
 
       const llmRequest: LlmRequest = {
         prompt,
-        temperature: 0.7,
+        temperature: this.configService.getLlmTemperature(),
       };
 
       const llmResponse = await this.llmClient.generateResponse(llmRequest);

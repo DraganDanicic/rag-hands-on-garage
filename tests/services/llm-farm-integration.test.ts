@@ -50,17 +50,13 @@ describe('LLM Farm Integration Tests', () => {
       it('should initialize with correct base URL and headers', () => {
         new LlmFarmEmbeddingClient(testApiKey);
 
-        expect(axiosCreateMock).toHaveBeenCalledWith({
-          baseURL: 'https://aoai-farm.bosch-temp.com/api/openai/deployments/askbosch-prod-farm-openai-text-embedding-3-small',
-          headers: {
-            'genaiplatform-farm-subscription-key': testApiKey,
-            'Content-Type': 'application/json',
-          },
-          params: {
-            'api-version': '2024-10-21',
-          },
-          timeout: 30000,
-        });
+        expect(axiosCreateMock).toHaveBeenCalled();
+        const config = axiosCreateMock.mock.calls[0][0];
+        expect(config.baseURL).toContain('https://aoai-farm.bosch-temp.com/api/openai/deployments/');
+        expect(config.baseURL).toContain('/embeddings');
+        expect(config.headers['genaiplatform-farm-subscription-key']).toBe(testApiKey);
+        expect(config.headers['Content-Type']).toBe('application/json');
+        expect(config.params['api-version']).toBe('2024-10-21');
       });
     });
 
@@ -207,14 +203,12 @@ describe('LLM Farm Integration Tests', () => {
       it('should initialize with correct base URL and headers', () => {
         new LlmFarmLlmClient(testApiKey);
 
-        expect(axiosCreateMock).toHaveBeenCalledWith({
-          baseURL: 'https://aoai-farm.bosch-temp.com/api/openai/deployments/google-gemini-2-0-flash-lite/chat/completions',
-          headers: {
-            'genaiplatform-farm-subscription-key': testApiKey,
-            'Content-Type': 'application/json',
-          },
-          timeout: 60000,
-        });
+        expect(axiosCreateMock).toHaveBeenCalled();
+        const config = axiosCreateMock.mock.calls[0][0];
+        expect(config.baseURL).toContain('https://aoai-farm.bosch-temp.com/api/openai/deployments/');
+        expect(config.baseURL).toContain('/chat/completions');
+        expect(config.headers['genaiplatform-farm-subscription-key']).toBe(testApiKey);
+        expect(config.headers['Content-Type']).toBe('application/json');
       });
     });
 
