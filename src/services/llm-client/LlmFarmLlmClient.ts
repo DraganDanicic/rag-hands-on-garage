@@ -33,7 +33,10 @@ export class LlmFarmLlmClient implements ILlmClient {
     this.maxRetries = config.maxRetries ?? 3;
     this.retryDelay = config.retryDelayMs ?? 1000;
     const timeout = config.timeoutMs ?? 60000;
-    const proxyEnabled = config.proxyEnabled ?? (process.env.https_proxy || process.env.HTTPS_PROXY ? true : false);
+
+    // Use proxy config from ConfigService (which auto-detects from https_proxy)
+    // This ensures consistent proxy behavior with EmbeddingClient
+    const proxyEnabled = config.proxyEnabled ?? false;
     const proxyHost = config.proxyHost ?? '127.0.0.1';
     const proxyPort = config.proxyPort ?? 3128;
 
@@ -47,10 +50,11 @@ export class LlmFarmLlmClient implements ILlmClient {
     }) : undefined;
 
     // Construct baseURL based on model name
-    // Convert model name to deployment name format
-    const deploymentName = this.model.startsWith('google-')
-      ? this.model
-      : `google-${this.model}`;
+    // Convert model name to deployment name format (dots -> dashes for URL)
+    const modelForUrl = this.model.replace(/\./g, '-');
+    const deploymentName = modelForUrl.startsWith('google-')
+      ? modelForUrl
+      : `google-${modelForUrl}`;
 
     this.client = axios.create({
       baseURL: `https://aoai-farm.bosch-temp.com/api/openai/deployments/${deploymentName}/chat/completions`,

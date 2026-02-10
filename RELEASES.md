@@ -5,6 +5,88 @@ All notable changes documented following [Keep a Changelog](https://keepachangel
 ## [Unreleased]
 <!-- Future changes go here -->
 
+## [1.3.0] - 2026-02-11
+
+### Added
+- **In-Chat Slash Commands**: Interactive command system within chat sessions
+  - `/help` - Display all available commands with descriptions
+  - `/exit`, `/quit` - Exit the chat session
+  - `/collection <name>` - Switch to a different collection mid-session
+  - `/collections` - List all available collections with statistics
+  - `/settings` - Show current LLM configuration
+  - `/status` - Display collection statistics
+  - `/config` - Show full system configuration
+  - Command Pattern architecture with CommandParser and CommandRegistry
+  - Collection switching with automatic container re-initialization
+  - Full backward compatibility (plain `exit`/`quit` still works)
+- **Selective Document Processing**: Granular control over document indexing
+  - `rag-garage documents list` - List available PDF documents with metadata
+  - `--documents "file1.pdf,file2.pdf"` - Select specific files to process
+  - `--interactive` - Interactive document selection UI
+  - `--dry-run` - Preview what would be processed without generating embeddings
+  - Support for incremental document addition to existing collections
+  - DocumentMetadata model for file information
+  - Extended IDocumentReader with listDocuments() and readSelectedDocuments()
+- **Automatic Proxy Detection**: Smart proxy configuration for Bosch network
+  - Auto-detects proxy settings from `https_proxy` environment variable
+  - Parses proxy URL to extract host and port automatically
+  - Priority: `https_proxy` > `PROXY_HOST`/`PROXY_PORT` > defaults
+  - Works out-of-the-box on any Bosch computer with standard proxy setup
+  - No manual configuration needed for corporate networks
+- **Comprehensive Documentation**:
+  - FEATURES_IMPLEMENTATION.md - Implementation summary
+  - VERIFICATION.md - Complete manual testing guide
+  - DEMO.md - Quick demo and usage examples
+  - src/services/command-handler/README.md - Command handler service documentation
+
+### Changed
+- Chat interface now parses slash commands before processing queries
+- ConfigService now prioritizes `https_proxy` over individual proxy settings
+- LlmClient and EmbeddingClient use ConfigService proxy settings consistently
+- IndexingWorkflow accepts optional pre-loaded documents parameter
+- Updated .env.example with enhanced proxy documentation
+
+### Fixed
+- **LLM Deployment Name Format**: Corrected model name URL encoding
+  - Converts dots to dashes in deployment names (e.g., `gemini-2.0-flash-lite` → `google-gemini-2-0-flash-lite`)
+  - Fixes 404 errors when querying LLM Farm API
+- **Proxy Configuration**: Fixed proxy auto-detection for Bosch network
+  - LlmFarmLlmClient and LlmFarmEmbeddingClient now properly use parsed proxy settings
+  - Ensures consistent proxy behavior across all API clients
+- **Test Suite**: Updated mocks to match new IDocumentReader interface methods
+
+### Migration Guide
+
+No breaking changes. All new features are opt-in:
+
+**To use slash commands:**
+```bash
+npm run chat
+# Then type: /help
+```
+
+**To use document selection:**
+```bash
+# List documents first
+rag-garage documents list
+
+# Select specific files
+rag-garage generate --documents "file1.pdf,file2.pdf"
+
+# Interactive mode
+rag-garage generate --interactive
+
+# Preview mode
+rag-garage generate --dry-run
+```
+
+**Proxy configuration:**
+- If you have `https_proxy` set (standard on Bosch computers), proxy will auto-detect
+- No changes needed to existing `.env` files
+- System works automatically on corporate networks
+
+**Commit:** [View changes](../../compare/v1.2.0...v1.3.0)
+
 ## [1.2.0] - 2026-02-10
 
 ### Added

@@ -81,9 +81,20 @@ export class ConfigService implements IConfigService {
     this.llmApiTimeoutMs = this.parseNumber(process.env['LLM_API_TIMEOUT_MS'], 60000);
 
     // Load proxy configuration with defaults
-    this.proxyEnabled = this.parseBoolean(process.env['PROXY_ENABLED'], false);
-    this.proxyHost = process.env['PROXY_HOST'] ?? '127.0.0.1';
-    this.proxyPort = this.parseNumber(process.env['PROXY_PORT'], 3128);
+    // Auto-detect from https_proxy env var (standard for Bosch network)
+    // This takes precedence over individual PROXY_HOST/PROXY_PORT settings
+    const httpsProxyUrl = process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+    const parsedProxy = this.parseProxyUrl(httpsProxyUrl);
+
+    this.proxyEnabled = this.parseBoolean(
+      process.env['PROXY_ENABLED'],
+      httpsProxyUrl ? true : false  // Auto-enable if https_proxy is set
+    );
+
+    // Priority: parsed https_proxy > explicit PROXY_HOST > default
+    this.proxyHost = parsedProxy.host ?? process.env['PROXY_HOST'] ?? '127.0.0.1';
+    // Priority: parsed https_proxy > explicit PROXY_PORT > default
+    this.proxyPort = parsedProxy.port ?? this.parseNumber(process.env['PROXY_PORT'], 3128);
 
     // Load paths with defaults
     this.documentsPath = process.env['DOCUMENTS_PATH'] ?? path.join(this.projectRoot, 'documents');
@@ -219,6 +230,37 @@ export class ConfigService implements IConfigService {
     }
 
     return parsed;
+  }
+
+  /**
+   * Parse proxy URL to extract host and port
+   * Supports formats: http://host:port, https://host:port, host:port
+   */
+  private parseProxyUrl(proxyUrl: string | undefined): { host: string | null; port: number | null } {
+    if (!proxyUrl) {
+      return { host: null, port: null };
+    }
+
+    try {
+      // Remove protocol if present
+      const urlWithoutProtocol = proxyUrl.replace(/^https?:\/\//, '');
+
+      // Split host:port
+      const parts = urlWithoutProtocol.split(':');
+      if (parts.length === 2 && parts[1]) {
+        const host = parts[0];
+        const port = parseInt(parts[1], 10);
+
+        if (host && !isNaN(port)) {
+          return { host, port };
+        }
+      }
+    } catch (error) {
+      // If parsing fails, return null
+      console.warn(`Failed to parse proxy URL: ${proxyUrl}`);
+    }
+
+    return { host: null, port: null };
   }
 
   /**

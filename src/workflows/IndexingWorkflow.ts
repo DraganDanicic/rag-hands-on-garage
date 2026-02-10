@@ -28,17 +28,24 @@ export class IndexingWorkflow {
 
   /**
    * Execute the full indexing workflow
+   * @param providedDocuments - Optional array of pre-loaded documents to process (if not provided, reads from directory)
    * @returns Number of embeddings generated and stored
    */
-  async execute(): Promise<number> {
+  async execute(providedDocuments?: import('../services/document-reader/models/Document.js').Document[]): Promise<number> {
     try {
       this.progressReporter.start('Starting document indexing workflow...');
 
-      // Step 1: Read documents from configured directory
-      const documentsPath = this.configService.getDocumentsPath();
-      this.progressReporter.info(`Reading documents from: ${documentsPath}`);
+      // Step 1: Get documents (either provided or read from directory)
+      let documents: import('../services/document-reader/models/Document.js').Document[];
 
-      const documents = await this.documentReader.readDocuments(documentsPath);
+      if (providedDocuments) {
+        documents = providedDocuments;
+        this.progressReporter.info(`Processing ${documents.length} provided document(s)`);
+      } else {
+        const documentsPath = this.configService.getDocumentsPath();
+        this.progressReporter.info(`Reading documents from: ${documentsPath}`);
+        documents = await this.documentReader.readDocuments(documentsPath);
+      }
 
       if (documents.length === 0) {
         this.progressReporter.error('No documents found in the documents directory');

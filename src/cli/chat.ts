@@ -3,6 +3,8 @@
 import * as readline from 'readline';
 import { Container } from '../di/Container.js';
 import { QueryWorkflow } from '../workflows/QueryWorkflow.js';
+import { CommandParser, createCommandRegistry } from '../services/command-handler/index.js';
+import type { ChatContext } from '../services/command-handler/index.js';
 import chalk from 'chalk';
 
 /**
@@ -23,32 +25,35 @@ async function main(): Promise<void> {
   // Parse command-line arguments for collection name
   const args = process.argv.slice(2);
   const collectionIndex = args.indexOf('--collection');
-  const collectionName = collectionIndex >= 0 && args[collectionIndex + 1]
-    ? args[collectionIndex + 1]
-    : 'default';
+  let collectionName: string = (collectionIndex >= 0 && args[collectionIndex + 1]) || 'default';
 
   console.log(chalk.blue.bold('\nRAG Interactive Chat\n'));
   console.log(chalk.gray('='.repeat(50)));
   console.log(chalk.white(`Collection: ${collectionName}`));
   console.log(chalk.white('Ask questions about your documents.'));
-  console.log(chalk.white(`Type ${chalk.yellow("'exit'")} or ${chalk.yellow("'quit'")} to end the session.\n`));
+  console.log(chalk.white(`Type ${chalk.cyan('/help')} for available commands or ${chalk.yellow("'exit'")} to end the session.\n`));
 
   try {
+    // Initialize command parser and registry
+    const commandParser = new CommandParser();
+    const commandRegistry = createCommandRegistry();
+
     // Initialize dependency injection container with collection name
-    const container = new Container(collectionName);
+    let container = new Container(collectionName);
     await container.initialize();
 
     // Get required services
-    const configService = container.getConfigService();
-    const embeddingClient = container.getEmbeddingClient();
-    const embeddingStore = container.getEmbeddingStore();
-    const vectorSearch = container.getVectorSearch();
-    const promptBuilder = container.getPromptBuilder();
-    const llmClient = container.getLlmClient();
-    const progressReporter = container.getProgressReporter();
+    let configService = container.getConfigService();
+    let embeddingClient = container.getEmbeddingClient();
+    let embeddingStore = container.getEmbeddingStore();
+    let vectorSearch = container.getVectorSearch();
+    let promptBuilder = container.getPromptBuilder();
+    let llmClient = container.getLlmClient();
+    let progressReporter = container.getProgressReporter();
+    let collectionManager = container.getCollectionManager();
 
     // Create query workflow
-    const workflow = new QueryWorkflow(
+    let workflow = new QueryWorkflow(
       configService,
       embeddingClient,
       embeddingStore,
@@ -91,7 +96,98 @@ async function main(): Promise<void> {
     rl.on('line', async (input: string) => {
       const question = input.trim();
 
-      // Check for exit commands
+      // Parse input to detect commands vs queries
+      const parsed = commandParser.parse(question);
+
+      // Handle commands
+      if (parsed.type === 'command') {
+        const handler = commandRegistry.get(parsed.name!);
+
+        if (handler) {
+          try {
+            // Build chat context
+            const context: ChatContext = {
+              container,
+              workflow,
+              collectionName,
+              readline: rl,
+              configService,
+              collectionManager,
+            };
+
+            // Execute command
+            const result = await handler.execute(parsed.args!, context);
+
+            // Display message if provided
+            if (result.message) {
+              console.log(result.message);
+            }
+
+            // Handle exit
+            if (result.shouldExit) {
+              console.log(chalk.yellow('\nGoodbye!\n'));
+              rl.close();
+              process.exit(0);
+            }
+
+            // Handle collection switching
+            if (result.shouldSwitchCollection) {
+              try {
+                // Re-initialize container with new collection
+                collectionName = result.shouldSwitchCollection;
+                container = new Container(collectionName);
+                await container.initialize();
+
+                // Get all services again
+                configService = container.getConfigService();
+                embeddingClient = container.getEmbeddingClient();
+                embeddingStore = container.getEmbeddingStore();
+                vectorSearch = container.getVectorSearch();
+                promptBuilder = container.getPromptBuilder();
+                llmClient = container.getLlmClient();
+                progressReporter = container.getProgressReporter();
+                collectionManager = container.getCollectionManager();
+
+                // Recreate workflow with new services
+                workflow = new QueryWorkflow(
+                  configService,
+                  embeddingClient,
+                  embeddingStore,
+                  vectorSearch,
+                  promptBuilder,
+                  llmClient,
+                  progressReporter
+                );
+
+                console.log(chalk.green(`\n✓ Switched to collection '${collectionName}'\n`));
+              } catch (error) {
+                const errorHandler = container.getErrorHandler();
+                const guidance = errorHandler.getGuidance(error);
+                console.error(chalk.red(`\n✗ ${guidance.title}: ${guidance.message}\n`));
+              }
+            }
+          } catch (error) {
+            const errorHandler = container.getErrorHandler();
+            const guidance = errorHandler.getGuidance(error);
+            console.error(chalk.red(`\n✗ ${guidance.title}: `) + chalk.white(guidance.message));
+
+            if (guidance.tips.length > 0 && guidance.tips.length <= 2) {
+              console.log(chalk.yellow('Tip: ') + chalk.gray(guidance.tips[0]));
+            }
+          }
+
+          rl.prompt();
+          return;
+        } else {
+          // Unknown command
+          console.log(chalk.yellow(`\nUnknown command: /${parsed.name}`));
+          console.log(chalk.gray('Type /help to see available commands\n'));
+          rl.prompt();
+          return;
+        }
+      }
+
+      // Check for legacy exit commands (backward compatibility)
       if (question.toLowerCase() === 'exit' || question.toLowerCase() === 'quit') {
         console.log(chalk.yellow('\nGoodbye!\n'));
         rl.close();

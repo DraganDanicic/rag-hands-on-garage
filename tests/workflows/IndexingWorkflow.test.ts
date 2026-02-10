@@ -18,7 +18,7 @@ import { IEmbeddingStore } from '../../src/services/embedding-store/IEmbeddingSt
 import { IProgressReporter } from '../../src/services/progress-reporter/IProgressReporter.js';
 import { Document } from '../../src/services/document-reader/models/Document.js';
 import { TextChunk } from '../../src/services/text-chunker/models/TextChunk.js';
-import { promises as fs } from 'fs';
+// import { promises as fs } from 'fs';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -69,6 +69,8 @@ describe('IndexingWorkflow', () => {
     mockDocumentReader = {
       readDocument: jest.fn(),
       readDocuments: jest.fn(),
+      listDocuments: jest.fn(),
+      readSelectedDocuments: jest.fn(),
     } as jest.Mocked<IDocumentReader>;
 
     mockTextChunker = {

@@ -31,7 +31,9 @@ export class LlmFarmEmbeddingClient implements IEmbeddingClient {
     this.maxRetries = config.maxRetries ?? 3;
     this.retryDelay = config.retryDelayMs ?? 1000;
     const timeout = config.timeoutMs ?? 30000;
-    const proxyEnabled = config.proxyEnabled ?? (process.env.https_proxy || process.env.HTTPS_PROXY ? true : false);
+
+    // Use proxy config from ConfigService (which auto-detects from https_proxy)
+    const proxyEnabled = config.proxyEnabled ?? false;
     const proxyHost = config.proxyHost ?? '127.0.0.1';
     const proxyPort = config.proxyPort ?? 3128;
 
