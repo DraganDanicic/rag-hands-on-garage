@@ -54,7 +54,7 @@ async function main() {
 
   // Example 2: Load embeddings
   console.log('2. Loading embeddings...');
-  const loaded = await store.load();
+  const { embeddings: loaded } = await store.load();
   console.log(`Loaded ${loaded.length} embeddings:`);
   loaded.forEach((emb, idx) => {
     console.log(`  [${idx}] "${emb.text.substring(0, 40)}..."`);
@@ -82,18 +82,18 @@ async function main() {
   ];
 
   await store.save(newBatch);
-  const afterSave = await store.load();
+  const { embeddings: afterSave } = await store.load();
   console.log(`Now have ${afterSave.length} embeddings (previous batch was overwritten)\n`);
 
   // Example 4: Clear embeddings
   console.log('4. Clearing all embeddings...');
   await store.clear();
-  const afterClear = await store.load();
+  const { embeddings: afterClear } = await store.load();
   console.log(`After clear: ${afterClear.length} embeddings\n`);
 
   // Example 5: Load from empty store
   console.log('5. Loading from empty store (returns empty array)...');
-  const empty = await store.load();
+  const { embeddings: empty } = await store.load();
   console.log(`Loaded ${empty.length} embeddings (as expected)\n`);
 
   console.log('=== Example Complete ===');

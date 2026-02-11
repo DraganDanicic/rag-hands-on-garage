@@ -5,10 +5,10 @@ import { IndexingWorkflow } from '../workflows/IndexingWorkflow.js';
 import chalk from 'chalk';
 
 /**
- * CLI command to generate embeddings from PDF documents
+ * CLI command to generate embeddings from documents
  *
  * This command:
- * 1. Reads all PDFs from the documents/ folder
+ * 1. Reads all documents (PDF, TXT, MD) from the documents/ folder
  * 2. Chunks the text content
  * 3. Generates embeddings using OpenAI API
  * 4. Stores embeddings in data/collections/{collection}.embeddings.json
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
     }
 
     console.log(chalk.yellow('\nTroubleshooting tips:'));
-    console.log(chalk.white('  1. Ensure PDFs are in the documents/ folder'));
+    console.log(chalk.white('  1. Ensure PDF, TXT, or MD files are in the documents/ folder'));
     console.log(chalk.white('  2. Check that your .env file has valid API keys'));
     console.log(chalk.white('  3. Verify your OpenAI API key is active'));
     console.log(chalk.white('  4. Check your internet connection\n'));

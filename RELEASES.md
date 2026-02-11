@@ -5,6 +5,95 @@ All notable changes documented following [Keep a Changelog](https://keepachangel
 ## [Unreleased]
 <!-- Future changes go here -->
 
+## [1.4.0] - 2026-02-11
+
+### Added
+- **Unified /settings Command**: Single command for all settings management
+  - Displays query settings, import settings, and system config in one view
+  - Supports flexible key names (spaces, hyphens, underscores)
+  - Auto-detects setting type and routes to correct service
+  - Reset functionality for all settings
+  - Comprehensive help with constraints and examples
+- **Query Settings Service**: Runtime query behavior management
+  - Settings: top-k, temperature, max-tokens, template, show-prompt
+  - Persistent storage in data/query-settings.json
+  - Affects behavior without changing data structure
+  - Validation with clear error messages
+- **Import Settings Service**: Global defaults for new collections
+  - Settings: chunk-size, chunk-overlap, checkpoint-interval, embedding-model
+  - Persistent storage in data/import-settings.json
+  - Applied only when creating new collections (existing untouched)
+- **Six New In-Chat Commands**:
+  - /import - Interactive document import workflow
+  - /delete - Delete collections with confirmation
+  - /rename - Rename collections atomically
+  - /import-settings - Manage import settings (deprecated - use /settings)
+  - /query-settings - Manage query settings (deprecated - use /settings)
+  - /show-prompt - Toggle prompt visibility for debugging
+- **Enhanced Tab Completion**: Auto-complete for commands, collections, and setting keys
+- **Prompt Visibility Feature**: Display retrieved chunks and final prompt
+  - Shows similarity scores for each chunk
+  - Displays complete prompt sent to LLM
+  - Helps understand query construction and debugging
+- **Graceful Collection Handling**:
+  - Auto-fallback when default collection doesn't exist
+  - Empty mode support (chat starts without collections)
+  - Friendly messages guide users to /import command
+- **Settings Metadata in Collections**: Collections now store creation settings
+- **ESC/Ctrl+C Cancellation**: Interrupt interactive commands gracefully
+
+### Changed
+- QueryWorkflow now uses QuerySettings instead of ConfigService for query parameters
+- Chat can start in empty mode without exiting on missing collections
+- Collection switching handles missing collections with auto-fallback
+- Temperature and max-tokens now runtime-configurable (no restart needed)
+- Settings hierarchy clarified: defaults → global import → collection (locked) → runtime query
+- /query-settings and /import-settings deprecated in favor of unified /settings
+
+### Fixed
+- Settings commands confusion (3 commands → 1 unified command)
+- Chat exit on missing default collection (now auto-fallback)
+- Inability to modify settings with /settings command (now fully functional)
+- No way to change query behavior without editing .env (now runtime-configurable)
+
+### Documentation
+- USING_PROMPT_TEMPLATES.md - Guide for prompt template customization
+- ESC_CANCELLATION.md - ESC key cancellation documentation
+- TESTING_NEW_FEATURES.md - Test scenarios for new commands
+- TESTING_QUERY_SETTINGS.md - Test scenarios for settings management
+
+### Deprecation Notice
+- /query-settings command deprecated - use /settings instead
+- /import-settings command deprecated - use /settings instead
+- Both commands still work but show migration guidance
+
+### Migration Guide
+
+**No breaking changes** - all existing workflows continue to work.
+
+**New unified settings command:**
+```bash
+npm run chat
+/settings              # View all settings
+/settings set top-k 5  # Change query setting
+/settings set chunk-size 600  # Change import setting
+/settings reset        # Reset all to defaults
+```
+
+**Old commands still work (with deprecation warnings):**
+```bash
+/query-settings   # Shows: "Use /settings instead"
+/import-settings  # Shows: "Use /settings instead"
+```
+
+**Empty mode usage:**
+```bash
+npm run chat  # Starts even with no collections
+/import       # Create first collection from within chat
+```
+
+**Commit:** [View changes](../../compare/v1.3.0...v1.4.0)
+
 ## [1.3.0] - 2026-02-11
 
 ### Added

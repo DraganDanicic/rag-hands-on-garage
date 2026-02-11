@@ -9,6 +9,9 @@ import { IVectorSearch } from '../services/vector-search/IVectorSearch.js';
 import { IPromptBuilder } from '../services/prompt-builder/IPromptBuilder.js';
 import { ICollectionManager } from '../services/collection-manager/ICollectionManager.js';
 import { IErrorHandler } from '../services/error-handler/IErrorHandler.js';
+import { IImportSettings } from '../services/import-settings/IImportSettings.js';
+import { IQuerySettings } from '../services/query-settings/IQuerySettings.js';
+import { ITemplateLoader } from '../services/template-loader/ITemplateLoader.js';
 
 /**
  * Dependency Injection Container interface
@@ -74,4 +77,19 @@ export interface IContainer {
    * Get the error handler service instance
    */
   getErrorHandler(): IErrorHandler;
+
+  /**
+   * Get the import settings service instance
+   */
+  getImportSettings(): IImportSettings;
+
+  /**
+   * Get the query settings service instance
+   */
+  getQuerySettings(): IQuerySettings;
+
+  /**
+   * Get the template loader service instance
+   */
+  getTemplateLoader(): ITemplateLoader;
 }

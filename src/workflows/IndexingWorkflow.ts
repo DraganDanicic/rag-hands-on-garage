@@ -73,7 +73,7 @@ export class IndexingWorkflow {
       this.progressReporter.info(`Chunks saved to ${chunksPath} for inspection`);
 
       // Step 3: Load existing embeddings for resume capability
-      const existingEmbeddings = await this.embeddingStore.load();
+      const { embeddings: existingEmbeddings } = await this.embeddingStore.load();
       const existingChunkIds = new Set(
         existingEmbeddings
           .map(e => e.metadata?.chunkId as string | undefined)

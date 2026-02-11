@@ -27,6 +27,14 @@ export interface ICollectionManager {
   deleteCollection(name: string): Promise<void>;
 
   /**
+   * Rename a collection
+   * @param oldName - Current collection name
+   * @param newName - New collection name
+   * @throws Error if old collection doesn't exist or new name already exists
+   */
+  renameCollection(oldName: string, newName: string): Promise<void>;
+
+  /**
    * Check if a collection exists
    * @param name - Collection name
    * @returns True if collection exists

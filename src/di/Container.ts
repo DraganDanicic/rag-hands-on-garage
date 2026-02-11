@@ -11,6 +11,8 @@ import { IPromptBuilder, createPromptBuilder } from '../services/prompt-builder/
 import { ITemplateLoader, createTemplateLoader } from '../services/template-loader/index.js';
 import { ICollectionManager, createCollectionManager } from '../services/collection-manager/index.js';
 import { IErrorHandler, createErrorHandler } from '../services/error-handler/index.js';
+import { IImportSettings, createImportSettings } from '../services/import-settings/index.js';
+import { IQuerySettings, createQuerySettings } from '../services/query-settings/index.js';
 import { ChunkingConfig } from '../services/text-chunker/models/ChunkingConfig.js';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -32,6 +34,8 @@ export class Container implements IContainer {
   private readonly promptBuilder: IPromptBuilder;
   private readonly collectionManager: ICollectionManager;
   private readonly errorHandler: IErrorHandler;
+  private readonly importSettings: IImportSettings;
+  private readonly querySettings: IQuerySettings;
   private initialized: boolean = false;
 
   constructor(collectionName: string = 'default') {
@@ -98,6 +102,12 @@ export class Container implements IContainer {
 
     // Initialize error handler
     this.errorHandler = createErrorHandler();
+
+    // Initialize import settings
+    this.importSettings = createImportSettings(this.configService);
+
+    // Initialize query settings
+    this.querySettings = createQuerySettings(this.configService);
   }
 
   /**
@@ -110,6 +120,12 @@ export class Container implements IContainer {
 
     // Initialize prompt builder (loads template)
     await this.promptBuilder.initialize();
+
+    // Initialize import settings (loads from file if exists)
+    await this.importSettings.initialize();
+
+    // Initialize query settings (loads from file if exists)
+    await this.querySettings.initialize();
 
     this.initialized = true;
   }
@@ -156,5 +172,17 @@ export class Container implements IContainer {
 
   getErrorHandler(): IErrorHandler {
     return this.errorHandler;
+  }
+
+  getImportSettings(): IImportSettings {
+    return this.importSettings;
+  }
+
+  getQuerySettings(): IQuerySettings {
+    return this.querySettings;
+  }
+
+  getTemplateLoader(): ITemplateLoader {
+    return this.templateLoader;
   }
 }

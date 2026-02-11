@@ -113,13 +113,13 @@ export class ErrorHandler implements IErrorHandler {
 
     // No Documents Found
     {
-      pattern: /No documents found|no.*PDF.*found/i,
+      pattern: /No documents found|no.*PDF.*found|No supported documents/i,
       title: 'No Documents to Process',
-      message: 'No PDF files found in the documents directory.',
+      message: 'No supported documents found in the documents directory.',
       tips: [
-        '1. Add PDF files to the documents/ folder',
+        '1. Add PDF, TXT, or MD files to the documents/ folder',
         '2. Verify the DOCUMENTS_PATH in .env is correct',
-        '3. Ensure files have .pdf extension (case-insensitive)',
+        '3. Ensure files have .pdf, .txt, or .md extension (case-insensitive)',
         '4. Check file permissions'
       ],
       suggestedCommands: ['rag-garage config show']

@@ -31,11 +31,28 @@ export class StatusCommand implements ICommandHandler {
       '',
       chalk.blue.bold(`Collection: ${context.collectionName}`),
       '',
+      chalk.yellow('Statistics:'),
       `  ${chalk.cyan('Embeddings:'.padEnd(20))} ${chalk.white(stats.embeddingCount)} chunks`,
       `  ${chalk.cyan('File Size:'.padEnd(20))} ${chalk.white(sizeMB)} MB`,
       `  ${chalk.cyan('Last Modified:'.padEnd(20))} ${chalk.white(`${date} ${time}`)}`,
       '',
     ];
+
+    // Add settings if available
+    if (stats.settings) {
+      lines.push(
+        chalk.yellow('Settings (locked):'),
+        `  ${chalk.cyan('Chunk Size:'.padEnd(20))} ${chalk.white(stats.settings.chunkSize)} characters`,
+        `  ${chalk.cyan('Chunk Overlap:'.padEnd(20))} ${chalk.white(stats.settings.chunkOverlap)} characters`,
+        `  ${chalk.cyan('Embedding Model:'.padEnd(20))} ${chalk.white(stats.settings.embeddingModel)}`,
+        '',
+      );
+    } else {
+      lines.push(
+        chalk.gray('Settings: Not available (legacy collection)'),
+        '',
+      );
+    }
 
     return {
       shouldExit: false,

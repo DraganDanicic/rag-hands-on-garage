@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { IEmbeddingStore } from './IEmbeddingStore.js';
 import { StoredEmbedding } from './models/StoredEmbedding.js';
+import type { ImportSettingsData } from '../import-settings/models/ImportSettingsData.js';
 
 export class JsonEmbeddingStore implements IEmbeddingStore {
   constructor(private filePath: string) {
@@ -10,7 +11,7 @@ export class JsonEmbeddingStore implements IEmbeddingStore {
     }
   }
 
-  async save(embeddings: StoredEmbedding[]): Promise<void> {
+  async save(embeddings: StoredEmbedding[], settings?: ImportSettingsData): Promise<void> {
     if (!Array.isArray(embeddings)) {
       throw new Error('embeddings must be an array');
     }
@@ -32,9 +33,14 @@ export class JsonEmbeddingStore implements IEmbeddingStore {
     const dir = path.dirname(this.filePath);
     await fs.mkdir(dir, { recursive: true });
 
+    // Create data structure (with or without settings)
+    const data = settings
+      ? { settings, embeddings }
+      : embeddings; // Legacy format for backward compatibility
+
     // Atomic write: write to temp file then rename
     const tempPath = `${this.filePath}.tmp`;
-    const jsonData = JSON.stringify(embeddings, null, 2);
+    const jsonData = JSON.stringify(data, null, 2);
 
     try {
       await fs.writeFile(tempPath, jsonData, 'utf-8');
@@ -55,8 +61,8 @@ export class JsonEmbeddingStore implements IEmbeddingStore {
       throw new Error('embeddings must be an array');
     }
 
-    // Load existing embeddings
-    const existingEmbeddings = await this.load();
+    // Load existing embeddings and settings
+    const { embeddings: existingEmbeddings, settings } = await this.load();
 
     // Create a map of chunkId -> embedding for efficient lookup and merge
     const embeddingMap = new Map<string, StoredEmbedding>();
@@ -89,27 +95,41 @@ export class JsonEmbeddingStore implements IEmbeddingStore {
     // Convert map back to array
     const mergedEmbeddings = Array.from(embeddingMap.values());
 
-    // Save using the existing save method (which includes validation and atomic write)
-    await this.save(mergedEmbeddings);
+    // Save using the existing save method (preserve settings if they existed)
+    await this.save(mergedEmbeddings, settings);
   }
 
-  async load(): Promise<StoredEmbedding[]> {
+  async load(): Promise<{ embeddings: StoredEmbedding[]; settings?: ImportSettingsData }> {
     try {
       const data = await fs.readFile(this.filePath, 'utf-8');
-      const embeddings = JSON.parse(data);
+      const parsed = JSON.parse(data);
 
-      if (!Array.isArray(embeddings)) {
-        throw new Error('Stored data is not an array');
+      // Check if new format (with settings)
+      if (parsed && typeof parsed === 'object' && 'embeddings' in parsed && Array.isArray(parsed.embeddings)) {
+        return {
+          embeddings: parsed.embeddings as StoredEmbedding[],
+          settings: parsed.settings as ImportSettingsData | undefined,
+        };
       }
 
-      return embeddings;
+      // Legacy format: array of embeddings
+      if (Array.isArray(parsed)) {
+        return { embeddings: parsed as StoredEmbedding[], settings: undefined };
+      }
+
+      throw new Error('Stored data has invalid format');
     } catch (error) {
       // If file doesn't exist, return empty array
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        return [];
+        return { embeddings: [], settings: undefined };
       }
       throw new Error(`Failed to load embeddings: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  async loadEmbeddings(): Promise<StoredEmbedding[]> {
+    const { embeddings } = await this.load();
+    return embeddings;
   }
 
   async clear(): Promise<void> {

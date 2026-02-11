@@ -22,6 +22,139 @@ This project provides practical experience with RAG implementation by building a
 - **Storage**: Local file system (JSON)
 - **Interface**: CLI/Terminal
 
+## How to Use the Platform
+
+### Quick Start (3 Steps)
+
+1. **Setup**: Install dependencies and configure API key (see [Setup Instructions](#setup-instructions))
+2. **Add Documents**: Copy PDFs to documents/ folder
+3. **Chat**: Run interactive chat and start asking questions
+
+### Interactive Chat
+
+Start the chat interface:
+```bash
+npm run chat
+```
+
+Available in-chat commands:
+- `/help` - See all commands with descriptions
+- `/import` - Add documents and generate embeddings interactively
+- `/collections` - View all collections with statistics
+- `/collection <name>` - Switch to different collection
+- `/settings` - View/modify all settings (unified settings management)
+- `/show-prompt` - Toggle prompt visibility (for learning how RAG works)
+- `/status` - See collection statistics
+- `/config` - Show full system configuration
+- `/delete <name>` - Delete a collection (with confirmation)
+- `/rename <old> <new>` - Rename a collection
+- `/exit` or `/quit` - Exit chat
+
+### Managing Settings
+
+The `/settings` command controls all aspects of system behavior:
+
+**View all settings:**
+```bash
+/settings
+```
+
+**Query Settings** (runtime, affects current session):
+- `top-k` - How many chunks to retrieve (1-10, default: 3)
+- `temperature` - LLM creativity (0.0-2.0, default: 0.7)
+- `max-tokens` - Response length limit (100-8000, default: 2048)
+- `template` - Prompt style (default, concise, detailed, technical)
+- `show-prompt` - Display prompt details (true/false)
+
+**Import Settings** (for NEW collections only):
+- `chunk-size` - Characters per chunk (100-5000, default: 500)
+- `chunk-overlap` - Overlapping characters (0-500, default: 50)
+- `checkpoint-interval` - Save frequency (1-1000, default: 50)
+- `embedding-model` - Model to use (default: text-embedding-3-small)
+
+**Change a setting:**
+```bash
+/settings set top-k 5
+/settings set temperature 0.9
+/settings set chunk-size 1000
+```
+
+**Reset to defaults:**
+```bash
+/settings reset
+```
+
+**Note:** Key names are flexible - use spaces, hyphens, or underscores:
+- `/settings set "top k" 5` (with spaces)
+- `/settings set top-k 5` (with hyphens)
+- `/settings set top_k 5` (with underscores)
+
+### Working with Multiple Collections
+
+Organize different document sets with collections:
+
+**List collections:**
+```bash
+/collections
+```
+
+**Switch collection:**
+```bash
+/collection project-a
+```
+
+**Import to specific collection:**
+```bash
+/import
+# Then select collection when prompted
+```
+
+**From command line:**
+```bash
+npm run generate-embeddings -- --collection project-a
+npm run chat -- --collection project-a
+```
+
+### Adding Documents
+
+Two ways to add documents:
+
+**Option 1: Interactive (Recommended)**
+```bash
+npm run chat
+/import
+# Follow the prompts to select collection and documents
+```
+
+**Option 2: Command Line**
+```bash
+# Copy PDFs to documents/ folder
+cp your-file.pdf documents/
+
+# Generate embeddings
+npm run generate-embeddings
+
+# Or for specific collection
+npm run generate-embeddings -- --collection my-project
+```
+
+### Learning and Debugging
+
+**See how RAG works:**
+```bash
+/show-prompt on
+# Then ask a question - you'll see:
+# - Which chunks were retrieved
+# - Similarity scores
+# - Complete prompt sent to LLM
+```
+
+**Check system status:**
+```bash
+/status   # Collection statistics
+/config   # System configuration
+```
+
 ## Architecture
 
 The system follows an isolated service architecture where:

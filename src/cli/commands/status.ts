@@ -73,13 +73,17 @@ export const statusCommand = new Command('status')
 
       try {
         const files = await fs.readdir(documentsPath);
-        const pdfFiles = files.filter(f => f.toLowerCase().endsWith('.pdf'));
+        const supportedExtensions = ['.pdf', '.txt', '.md'];
+        const supportedFiles = files.filter(f => {
+          const ext = f.toLowerCase().substring(f.lastIndexOf('.'));
+          return supportedExtensions.includes(ext);
+        });
 
         console.log(chalk.white(`  Directory:            ${documentsPath}`));
-        console.log(chalk.white(`  PDF Files:            ${pdfFiles.length} files`));
+        console.log(chalk.white(`  Supported Files:      ${supportedFiles.length} files (PDF/TXT/MD)`));
 
-        if (pdfFiles.length === 0) {
-          console.log(chalk.yellow('  No PDF files found'));
+        if (supportedFiles.length === 0) {
+          console.log(chalk.yellow('  No supported documents found'));
         }
       } catch (error) {
         console.log(chalk.yellow(`  Directory:            ${documentsPath} (not found)`));

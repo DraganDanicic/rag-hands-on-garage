@@ -9,4 +9,11 @@ export interface CollectionInfo {
   embeddingsPath: string;
   chunksPath: string;
   chunksExists: boolean;
+  /** Settings used when collection was created (locked) */
+  settings?: {
+    chunkSize: number;
+    chunkOverlap: number;
+    checkpointInterval: number;
+    embeddingModel: string;
+  };
 }

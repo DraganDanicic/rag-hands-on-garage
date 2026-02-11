@@ -6,6 +6,12 @@ import { CollectionsCommand } from './commands/CollectionsCommand.js';
 import { SettingsCommand } from './commands/SettingsCommand.js';
 import { StatusCommand } from './commands/StatusCommand.js';
 import { ConfigCommand } from './commands/ConfigCommand.js';
+import { ImportSettingsCommand } from './commands/ImportSettingsCommand.js';
+import { QuerySettingsCommand } from './commands/QuerySettingsCommand.js';
+import { ShowPromptCommand } from './commands/ShowPromptCommand.js';
+import { DeleteCommand } from './commands/DeleteCommand.js';
+import { RenameCommand } from './commands/RenameCommand.js';
+import { ImportCommand } from './commands/ImportCommand.js';
 
 export { CommandParser } from './CommandParser.js';
 export { CommandRegistry } from './CommandRegistry.js';
@@ -25,6 +31,12 @@ export { CollectionsCommand } from './commands/CollectionsCommand.js';
 export { SettingsCommand } from './commands/SettingsCommand.js';
 export { StatusCommand } from './commands/StatusCommand.js';
 export { ConfigCommand } from './commands/ConfigCommand.js';
+export { ImportSettingsCommand } from './commands/ImportSettingsCommand.js';
+export { QuerySettingsCommand } from './commands/QuerySettingsCommand.js';
+export { ShowPromptCommand } from './commands/ShowPromptCommand.js';
+export { DeleteCommand } from './commands/DeleteCommand.js';
+export { RenameCommand } from './commands/RenameCommand.js';
+export { ImportCommand } from './commands/ImportCommand.js';
 
 /**
  * Factory function to create and configure a command registry with all commands
@@ -43,6 +55,12 @@ export function createCommandRegistry(): CommandRegistry {
   registry.register(new SettingsCommand());
   registry.register(new StatusCommand());
   registry.register(new ConfigCommand());
+  registry.register(new ImportSettingsCommand());
+  registry.register(new QuerySettingsCommand());
+  registry.register(new ShowPromptCommand());
+  registry.register(new DeleteCommand());
+  registry.register(new RenameCommand());
+  registry.register(new ImportCommand());
 
   return registry;
 }

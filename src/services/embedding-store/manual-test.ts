@@ -65,7 +65,7 @@ async function runTests() {
   // Test 3: Load embeddings
   try {
     const store = createEmbeddingStore(TEST_FILE);
-    const loaded = await store.load();
+    const { embeddings: loaded } = await store.load();
 
     if (loaded.length !== 2) throw new Error(`Expected 2 embeddings, got ${loaded.length}`);
     if (loaded[0]?.text !== 'test text 1') throw new Error('Text mismatch');
@@ -114,7 +114,7 @@ async function runTests() {
   // Test 6: Load non-existent file returns empty array
   try {
     const store = createEmbeddingStore(TEST_FILE);
-    const loaded = await store.load();
+    const { embeddings: loaded } = await store.load();
 
     if (loaded.length !== 0) throw new Error('Expected empty array');
 
@@ -200,7 +200,7 @@ async function runTests() {
     ];
 
     await store.save(embeddings);
-    const loaded = await store.load();
+    const { embeddings: loaded } = await store.load();
 
     const expected = JSON.stringify(embeddings[0]?.metadata);
     const actual = JSON.stringify(loaded[0]?.metadata);
