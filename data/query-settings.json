@@ -1,0 +1,7 @@
+{
+  "topK": 10,
+  "temperature": 0.7,
+  "maxTokens": 2048,
+  "promptTemplate": "detailed",
+  "showPrompt": true
+}

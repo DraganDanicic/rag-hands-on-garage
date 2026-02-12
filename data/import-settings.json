@@ -1,0 +1,6 @@
+{
+  "chunkSize": 400,
+  "chunkOverlap": 50,
+  "checkpointInterval": 50,
+  "embeddingModel": "askbosch-prod-farm-openai-text-embedding-3-small"
+}
