@@ -1,4 +1,5 @@
 import { PromptTemplate } from './models/PromptTemplate.js';
+import { Message } from '../conversation-history/models/Message.js';
 
 export interface IPromptBuilder {
   /**
@@ -27,4 +28,19 @@ export interface IPromptBuilder {
     contexts: string[],
     template: PromptTemplate
   ): string;
+
+  /**
+   * Builds a RAG prompt with conversation history
+   * @param question - The current user question
+   * @param contexts - Array of context strings to include in the prompt
+   * @param conversationHistory - Previous conversation messages
+   * @param template - Optional custom prompt template
+   * @returns Array of messages for LLM (system + history + current question)
+   */
+  buildPromptWithHistory(
+    question: string,
+    contexts: string[],
+    conversationHistory: Message[],
+    template?: PromptTemplate
+  ): Message[];
 }

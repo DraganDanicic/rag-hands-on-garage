@@ -55,6 +55,22 @@ export class QuerySettings implements IQuerySettings {
     return this.settings.showPrompt;
   }
 
+  getUseHistory(): boolean {
+    return this.settings.useHistory;
+  }
+
+  getHistoryWindowSize(): number {
+    return this.settings.historyWindowSize;
+  }
+
+  getHistoryMaxTokens(): number {
+    return this.settings.historyMaxTokens;
+  }
+
+  getMaxContextTokens(): number {
+    return this.settings.maxContextTokens;
+  }
+
   // Setters with validation
   setTopK(value: number): void {
     const { min, max } = QUERY_SETTINGS_CONSTRAINTS.topK;
@@ -89,6 +105,34 @@ export class QuerySettings implements IQuerySettings {
     this.settings.showPrompt = value;
   }
 
+  setUseHistory(value: boolean): void {
+    this.settings.useHistory = value;
+  }
+
+  setHistoryWindowSize(value: number): void {
+    const { min, max } = QUERY_SETTINGS_CONSTRAINTS.historyWindowSize;
+    if (value < min || value > max) {
+      throw new Error(`History window size must be between ${min} and ${max}`);
+    }
+    this.settings.historyWindowSize = Math.round(value);
+  }
+
+  setHistoryMaxTokens(value: number): void {
+    const { min, max } = QUERY_SETTINGS_CONSTRAINTS.historyMaxTokens;
+    if (value < min || value > max) {
+      throw new Error(`History max tokens must be between ${min} and ${max}`);
+    }
+    this.settings.historyMaxTokens = Math.round(value);
+  }
+
+  setMaxContextTokens(value: number): void {
+    const { min, max } = QUERY_SETTINGS_CONSTRAINTS.maxContextTokens;
+    if (value < min || value > max) {
+      throw new Error(`Max context tokens must be between ${min} and ${max}`);
+    }
+    this.settings.maxContextTokens = Math.round(value);
+  }
+
   // Utilities
   resetToDefaults(): void {
     this.settings = { ...DEFAULT_QUERY_SETTINGS };
@@ -117,12 +161,16 @@ export class QuerySettings implements IQuerySettings {
   async load(): Promise<void> {
     try {
       const data = await fs.readFile(this.settingsPath, 'utf-8');
-      const loaded = JSON.parse(data) as QuerySettingsData;
+      const loaded = JSON.parse(data) as Partial<QuerySettingsData>;
 
-      // Validate loaded settings
-      this.validateSettings(loaded);
+      // Merge with defaults to handle missing fields from older versions
+      this.settings = {
+        ...DEFAULT_QUERY_SETTINGS,
+        ...loaded
+      };
 
-      this.settings = loaded;
+      // Validate merged settings
+      this.validateSettings(this.settings);
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         // File doesn't exist - use defaults and create file
@@ -141,7 +189,7 @@ export class QuerySettings implements IQuerySettings {
 
   private validateSettings(settings: QuerySettingsData): void {
     // Validate all numeric settings
-    const { topK, temperature, maxTokens } = settings;
+    const { topK, temperature, maxTokens, historyWindowSize, historyMaxTokens, maxContextTokens } = settings;
 
     if (topK < QUERY_SETTINGS_CONSTRAINTS.topK.min ||
         topK > QUERY_SETTINGS_CONSTRAINTS.topK.max) {
@@ -156,6 +204,21 @@ export class QuerySettings implements IQuerySettings {
     if (maxTokens < QUERY_SETTINGS_CONSTRAINTS.maxTokens.min ||
         maxTokens > QUERY_SETTINGS_CONSTRAINTS.maxTokens.max) {
       throw new Error('Invalid maxTokens value in settings file');
+    }
+
+    if (historyWindowSize < QUERY_SETTINGS_CONSTRAINTS.historyWindowSize.min ||
+        historyWindowSize > QUERY_SETTINGS_CONSTRAINTS.historyWindowSize.max) {
+      throw new Error('Invalid historyWindowSize value in settings file');
+    }
+
+    if (historyMaxTokens < QUERY_SETTINGS_CONSTRAINTS.historyMaxTokens.min ||
+        historyMaxTokens > QUERY_SETTINGS_CONSTRAINTS.historyMaxTokens.max) {
+      throw new Error('Invalid historyMaxTokens value in settings file');
+    }
+
+    if (maxContextTokens < QUERY_SETTINGS_CONSTRAINTS.maxContextTokens.min ||
+        maxContextTokens > QUERY_SETTINGS_CONSTRAINTS.maxContextTokens.max) {
+      throw new Error('Invalid maxContextTokens value in settings file');
     }
   }
 }

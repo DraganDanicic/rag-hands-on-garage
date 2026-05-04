@@ -12,6 +12,7 @@ import { IErrorHandler } from '../services/error-handler/IErrorHandler.js';
 import { IImportSettings } from '../services/import-settings/IImportSettings.js';
 import { IQuerySettings } from '../services/query-settings/IQuerySettings.js';
 import { ITemplateLoader } from '../services/template-loader/ITemplateLoader.js';
+import { IConversationHistory } from '../services/conversation-history/IConversationHistory.js';
 
 /**
  * Dependency Injection Container interface
@@ -92,4 +93,9 @@ export interface IContainer {
    * Get the template loader service instance
    */
   getTemplateLoader(): ITemplateLoader;
+
+  /**
+   * Get the conversation history service instance
+   */
+  getConversationHistory(): IConversationHistory;
 }

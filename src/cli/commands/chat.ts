@@ -67,6 +67,7 @@ export const chatCommand = new Command('chat')
       let progressReporter = container.getProgressReporter();
       let collectionManager = container.getCollectionManager();
       let templateLoader = container.getTemplateLoader();
+      let conversationHistory = container.getConversationHistory();
 
       // Create query workflow
       let workflow = new QueryWorkflow(
@@ -77,7 +78,8 @@ export const chatCommand = new Command('chat')
         promptBuilder,
         llmClient,
         progressReporter,
-        templateLoader
+        templateLoader,
+        conversationHistory
       );
 
       // Verify embeddings exist before starting chat
@@ -159,6 +161,7 @@ export const chatCommand = new Command('chat')
                     progressReporter = container.getProgressReporter();
                     collectionManager = container.getCollectionManager();
                     templateLoader = container.getTemplateLoader();
+                    conversationHistory = container.getConversationHistory();
 
                     // Recreate workflow with new services
                     workflow = new QueryWorkflow(
@@ -169,7 +172,8 @@ export const chatCommand = new Command('chat')
                       promptBuilder,
                       llmClient,
                       progressReporter,
-                      templateLoader
+                      templateLoader,
+                      conversationHistory
                     );
 
                     console.log(chalk.green(`\n✓ Switched to collection '${collectionName}'\n`));

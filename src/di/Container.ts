@@ -13,6 +13,7 @@ import { ICollectionManager, createCollectionManager } from '../services/collect
 import { IErrorHandler, createErrorHandler } from '../services/error-handler/index.js';
 import { IImportSettings, createImportSettings } from '../services/import-settings/index.js';
 import { IQuerySettings, createQuerySettings } from '../services/query-settings/index.js';
+import { IConversationHistory, createConversationHistory } from '../services/conversation-history/index.js';
 import { ChunkingConfig } from '../services/text-chunker/models/ChunkingConfig.js';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -36,6 +37,7 @@ export class Container implements IContainer {
   private readonly errorHandler: IErrorHandler;
   private readonly importSettings: IImportSettings;
   private readonly querySettings: IQuerySettings;
+  private readonly conversationHistory: IConversationHistory;
   private initialized: boolean = false;
 
   constructor(collectionName: string = 'default') {
@@ -108,6 +110,9 @@ export class Container implements IContainer {
 
     // Initialize query settings
     this.querySettings = createQuerySettings(this.configService);
+
+    // Initialize conversation history (depends on query settings)
+    this.conversationHistory = createConversationHistory(this.querySettings);
   }
 
   /**
@@ -184,5 +189,9 @@ export class Container implements IContainer {
 
   getTemplateLoader(): ITemplateLoader {
     return this.templateLoader;
+  }
+
+  getConversationHistory(): IConversationHistory {
+    return this.conversationHistory;
   }
 }

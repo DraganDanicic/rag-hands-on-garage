@@ -69,8 +69,21 @@ export class LlmFarmLlmClient implements ILlmClient {
   }
 
   async generateResponse(request: LlmRequest): Promise<LlmResponse> {
-    if (!request.prompt || request.prompt.trim().length === 0) {
-      throw new Error('Prompt is required');
+    // Support both legacy prompt format and new messages format
+    let messages;
+    if (request.messages) {
+      // New format: use provided messages array
+      messages = request.messages;
+    } else if (request.prompt) {
+      // Legacy format: convert prompt to messages array
+      messages = [
+        {
+          role: 'user',
+          content: request.prompt,
+        },
+      ];
+    } else {
+      throw new Error('Either prompt or messages is required');
     }
 
     return await this.executeWithRetry(async () => {
@@ -78,12 +91,7 @@ export class LlmFarmLlmClient implements ILlmClient {
         // Use OpenAI Chat Completions format
         const response = await this.client.post('', {
           model: this.model,
-          messages: [
-            {
-              role: 'user',
-              content: request.prompt,
-            },
-          ],
+          messages,
           temperature: request.temperature ?? 0.7,
           max_tokens: request.maxTokens ?? 2048,
         });

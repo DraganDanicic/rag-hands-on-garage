@@ -83,6 +83,7 @@ async function main(): Promise<void> {
     let progressReporter = container.getProgressReporter();
     let collectionManager = container.getCollectionManager();
     let templateLoader = container.getTemplateLoader();
+    let conversationHistory = container.getConversationHistory();
 
     // Create query workflow
     let workflow = new QueryWorkflow(
@@ -93,7 +94,8 @@ async function main(): Promise<void> {
       promptBuilder,
       llmClient,
       progressReporter,
-      templateLoader
+      templateLoader,
+      conversationHistory
     );
 
     // Verify embeddings exist before starting chat
@@ -182,6 +184,7 @@ async function main(): Promise<void> {
                 progressReporter = container.getProgressReporter();
                 collectionManager = container.getCollectionManager();
                 templateLoader = container.getTemplateLoader();
+                conversationHistory = container.getConversationHistory();
 
                 // Recreate workflow with new services
                 workflow = new QueryWorkflow(
@@ -192,10 +195,16 @@ async function main(): Promise<void> {
                   promptBuilder,
                   llmClient,
                   progressReporter,
-                  templateLoader
+                  templateLoader,
+                  conversationHistory
                 );
 
                 console.log(chalk.green(`\n✓ Switched to collection '${collectionName}'\n`));
+
+                // Clear history on collection switch to prevent context bleeding
+                if (querySettings.getUseHistory()) {
+                  console.log(chalk.gray('Conversation history cleared (new collection)\n'));
+                }
               } catch (error) {
                 const errorHandler = container.getErrorHandler();
                 const guidance = errorHandler.getGuidance(error);

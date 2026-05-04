@@ -19,6 +19,10 @@ export class SettingsCommand implements ICommandHandler {
     'max-tokens': ['max tokens', 'maxtokens', 'max_tokens', 'tokens', 'max-tokens'],
     'template': ['prompt-template', 'prompt template', 'prompt_template', 'template'],
     'show-prompt': ['show-prompt', 'showprompt', 'show_prompt', 'show prompt'],
+    'use-history': ['use-history', 'use history', 'usehistory', 'use_history', 'history'],
+    'history-window-size': ['history-window-size', 'history window size', 'window size', 'window', 'history_window_size'],
+    'history-max-tokens': ['history-max-tokens', 'history max tokens', 'history tokens', 'history_max_tokens'],
+    'max-context-tokens': ['max-context-tokens', 'max context tokens', 'context tokens', 'max_context_tokens'],
     'chunk-size': ['chunk size', 'chunksize', 'chunk_size', 'chunk-size'],
     'chunk-overlap': ['chunk overlap', 'chunkoverlap', 'chunk_overlap', 'overlap', 'chunk-overlap'],
     'checkpoint-interval': ['checkpoint interval', 'checkpoint', 'checkpoint_interval', 'checkpoint-interval'],
@@ -75,6 +79,12 @@ export class SettingsCommand implements ICommandHandler {
       `  ${'Prompt Template:'.padEnd(25)} ${chalk.white(qSettings.promptTemplate)}`,
       `  ${'Show Prompt:'.padEnd(25)} ${chalk.white(qSettings.showPrompt ? 'enabled' : 'disabled')}`,
       '',
+      chalk.cyan('Conversation History Settings') + chalk.gray(' (multi-turn conversations):'),
+      `  ${'Use History:'.padEnd(25)} ${chalk.white(qSettings.useHistory ? 'enabled' : 'disabled')}`,
+      `  ${'Window Size:'.padEnd(25)} ${chalk.white(qSettings.historyWindowSize)} turns`,
+      `  ${'History Max Tokens:'.padEnd(25)} ${chalk.white(qSettings.historyMaxTokens)} tokens`,
+      `  ${'Max Context Tokens:'.padEnd(25)} ${chalk.white(qSettings.maxContextTokens)} tokens`,
+      '',
       chalk.cyan('Import Settings') + chalk.gray(' (for NEW collections only):'),
       `  ${'Chunk Size:'.padEnd(25)} ${chalk.white(iSettings.chunkSize)} characters`,
       `  ${'Chunk Overlap:'.padEnd(25)} ${chalk.white(iSettings.chunkOverlap)} characters`,
@@ -116,7 +126,7 @@ export class SettingsCommand implements ICommandHandler {
 
     try {
       // Query settings (runtime)
-      if (['top-k', 'temperature', 'max-tokens', 'template', 'show-prompt'].includes(normalizedKey)) {
+      if (['top-k', 'temperature', 'max-tokens', 'template', 'show-prompt', 'use-history', 'history-window-size', 'history-max-tokens', 'max-context-tokens'].includes(normalizedKey)) {
         return await this.setQuerySetting(querySettings, normalizedKey, value);
       }
 
@@ -210,6 +220,51 @@ export class SettingsCommand implements ICommandHandler {
         return {
           shouldExit: false,
           message: chalk.green(`\n✓ Show prompt ${enabled ? 'enabled' : 'disabled'}\n`)
+        };
+      }
+
+      case 'use-history': {
+        const enabled = ['true', '1', 'yes', 'on', 'enabled'].includes(value.toLowerCase());
+        querySettings.setUseHistory(enabled);
+        await querySettings.save();
+        return {
+          shouldExit: false,
+          message: chalk.green(`\n✓ Conversation history ${enabled ? 'enabled' : 'disabled'}\n`) +
+                   (enabled ? chalk.gray('Use /clear-history to reset, /show-history to view\n') : '')
+        };
+      }
+
+      case 'history-window-size': {
+        const size = parseInt(value, 10);
+        if (isNaN(size)) throw new Error('History window size must be a number');
+        querySettings.setHistoryWindowSize(size);
+        await querySettings.save();
+        return {
+          shouldExit: false,
+          message: chalk.green(`\n✓ History window size set to ${size} turns\n`)
+        };
+      }
+
+      case 'history-max-tokens': {
+        const tokens = parseInt(value, 10);
+        if (isNaN(tokens)) throw new Error('History max tokens must be a number');
+        querySettings.setHistoryMaxTokens(tokens);
+        await querySettings.save();
+        return {
+          shouldExit: false,
+          message: chalk.green(`\n✓ History max tokens set to ${tokens}\n`)
+        };
+      }
+
+      case 'max-context-tokens': {
+        const tokens = parseInt(value, 10);
+        if (isNaN(tokens)) throw new Error('Max context tokens must be a number');
+        querySettings.setMaxContextTokens(tokens);
+        await querySettings.save();
+        return {
+          shouldExit: false,
+          message: chalk.green(`\n✓ Max context tokens set to ${tokens}\n`) +
+                   chalk.gray('(Total budget for RAG chunks + conversation history)\n')
         };
       }
 
@@ -321,6 +376,12 @@ export class SettingsCommand implements ICommandHandler {
       '  template        Prompt template (default, concise, detailed, technical)',
       '  show-prompt     Show prompt before queries (true/false)',
       '',
+      chalk.yellow('Conversation History Settings:'),
+      '  use-history           Enable multi-turn conversations (true/false)',
+      `  history-window-size   Turns to keep (${QUERY_SETTINGS_CONSTRAINTS.historyWindowSize.min}-${QUERY_SETTINGS_CONSTRAINTS.historyWindowSize.max})`,
+      `  history-max-tokens    Token budget for history (${QUERY_SETTINGS_CONSTRAINTS.historyMaxTokens.min}-${QUERY_SETTINGS_CONSTRAINTS.historyMaxTokens.max})`,
+      `  max-context-tokens    Total context budget (${QUERY_SETTINGS_CONSTRAINTS.maxContextTokens.min}-${QUERY_SETTINGS_CONSTRAINTS.maxContextTokens.max})`,
+      '',
       chalk.yellow('Import Settings (for new collections):'),
       '  chunk-size         Characters per chunk (100-5000)',
       '  chunk-overlap      Overlapping characters (0-500)',
@@ -331,6 +392,8 @@ export class SettingsCommand implements ICommandHandler {
       '  /settings set top-k 5',
       '  /settings set "max tokens" 2000',
       '  /settings set temperature 0.9',
+      '  /settings set use-history true',
+      '  /settings set "history window size" 3',
       '  /settings set chunk-size 600',
       '',
       chalk.gray('Note: Key names are flexible - you can use spaces, hyphens, or underscores.'),

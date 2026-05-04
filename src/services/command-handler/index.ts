@@ -12,6 +12,9 @@ import { ShowPromptCommand } from './commands/ShowPromptCommand.js';
 import { DeleteCommand } from './commands/DeleteCommand.js';
 import { RenameCommand } from './commands/RenameCommand.js';
 import { ImportCommand } from './commands/ImportCommand.js';
+import { ClearHistoryCommand } from './commands/ClearHistoryCommand.js';
+import { ShowHistoryCommand } from './commands/ShowHistoryCommand.js';
+import { HistoryStatsCommand } from './commands/HistoryStatsCommand.js';
 
 export { CommandParser } from './CommandParser.js';
 export { CommandRegistry } from './CommandRegistry.js';
@@ -37,6 +40,9 @@ export { ShowPromptCommand } from './commands/ShowPromptCommand.js';
 export { DeleteCommand } from './commands/DeleteCommand.js';
 export { RenameCommand } from './commands/RenameCommand.js';
 export { ImportCommand } from './commands/ImportCommand.js';
+export { ClearHistoryCommand } from './commands/ClearHistoryCommand.js';
+export { ShowHistoryCommand } from './commands/ShowHistoryCommand.js';
+export { HistoryStatsCommand } from './commands/HistoryStatsCommand.js';
 
 /**
  * Factory function to create and configure a command registry with all commands
@@ -61,6 +67,9 @@ export function createCommandRegistry(): CommandRegistry {
   registry.register(new DeleteCommand());
   registry.register(new RenameCommand());
   registry.register(new ImportCommand());
+  registry.register(new ClearHistoryCommand());
+  registry.register(new ShowHistoryCommand());
+  registry.register(new HistoryStatsCommand());
 
   return registry;
 }

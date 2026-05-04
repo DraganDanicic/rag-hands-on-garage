@@ -2,6 +2,7 @@ import { IPromptBuilder } from './IPromptBuilder.js';
 import { PromptTemplate } from './models/PromptTemplate.js';
 import { ITemplateLoader } from '../template-loader/ITemplateLoader.js';
 import { IConfigService } from '../../config/IConfigService.js';
+import { Message } from '../conversation-history/models/Message.js';
 
 const DEFAULT_TEMPLATE: PromptTemplate = {
   template: `You are a helpful assistant. Answer the user's question based on the provided context.
@@ -83,6 +84,42 @@ export class PromptBuilder implements IPromptBuilder {
       .replaceAll('{question}', question);
 
     return prompt;
+  }
+
+  buildPromptWithHistory(
+    question: string,
+    contexts: string[],
+    conversationHistory: Message[],
+    template?: PromptTemplate
+  ): Message[] {
+    // Use provided template or fall back to default
+    const activeTemplate = template || this.template;
+
+    // Build system message with RAG context
+    const formattedContext = this.formatContexts(contexts);
+    const systemPrompt = activeTemplate.template
+      .replaceAll('{context}', formattedContext)
+      .replaceAll('{question}', ''); // Remove question placeholder from system message
+
+    // Clean up system prompt (remove empty "Question:" line)
+    const cleanedSystemPrompt = systemPrompt
+      .replace(/Question:\s*\n\nAnswer:/g, '')
+      .trim();
+
+    // Build messages array: system + history + current question
+    const messages: Message[] = [
+      {
+        role: 'system',
+        content: cleanedSystemPrompt,
+      },
+      ...conversationHistory,
+      {
+        role: 'user',
+        content: question,
+      },
+    ];
+
+    return messages;
   }
 
   private formatContexts(contexts: string[]): string {
