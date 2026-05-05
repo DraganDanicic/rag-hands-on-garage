@@ -20,15 +20,43 @@ This project provides practical experience with RAG implementation by building a
 - **Embedding Service**: Bosch LLM Farm (text-embedding-3-small)
 - **LLM Service**: Bosch LLM Farm (gemini-2.0-flash-lite)
 - **Storage**: Local file system (JSON)
-- **Interface**: CLI/Terminal
+- **Interface**: Web UI and CLI/Terminal
+- **Web Server**: Express.js with Server-Sent Events for progress streaming
 
 ## How to Use the Platform
 
 ### Quick Start (3 Steps)
 
 1. **Setup**: Install dependencies and configure API key (see [Setup Instructions](#setup-instructions))
-2. **Add Documents**: Copy PDFs to documents/ folder
-3. **Chat**: Run interactive chat and start asking questions
+2. **Add Documents**: Copy PDFs to documents/ folder or upload via Web UI
+3. **Chat**: Use the Web UI or run interactive chat in terminal
+
+### Web UI (Recommended for Beginners)
+
+Start the web server:
+```bash
+npm run server
+```
+
+Then open your browser to http://localhost:3000
+
+**Features:**
+- **Drag-and-Drop Upload**: Upload PDF documents directly from your browser
+- **Real-time Indexing**: Watch progress as documents are processed with live updates
+- **Chat Interface**: Ask questions about your documents with a clean, modern UI
+- **Collection Management**: Switch between document collections and view metadata
+- **Settings Panel**: Adjust chunk size, overlap, temperature, and other parameters
+- **Visual Feedback**: Progress bars, error messages, and success notifications
+
+**Usage:**
+1. **Select/Create Collection**: Click on a collection in the sidebar or upload to create new
+2. **Upload Documents**: Drag PDFs into the upload zone or click to browse files
+3. **Index Documents**: Click "Index Documents" to process uploads (watch the progress bar)
+4. **Ask Questions**: Type your question in the chat box and get answers from your documents
+5. **Adjust Settings**: Click the Settings button to fine-tune system parameters
+
+**API Documentation:**
+For API endpoint details, see [API.md](./API.md)
 
 ### Interactive Chat
 
@@ -429,6 +457,27 @@ cat data/chunks/default.chunks.json | jq '.[] | select(.metadata.sourceDocument 
 
 ## Development
 
+### Available NPM Scripts
+
+**Web Server:**
+- `npm run server` - Start development server (ts-node with hot reload)
+- `npm run server:build` - Build and run production server
+- `npm run build-server` - Compile server TypeScript only
+
+**CLI Tools:**
+- `npm run chat` - Start interactive chat (terminal)
+- `npm run generate-embeddings` - Process PDFs and create embeddings
+- `npm run check-connections` - Test API connectivity
+
+**Development:**
+- `npm run build` - Compile all TypeScript to JavaScript
+- `npm run dev` - Run chat in development mode
+
+**Testing:**
+- `npm test` - Run all tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+
 ### Build
 
 Compile TypeScript to JavaScript:
@@ -483,6 +532,52 @@ By completing this project, you will learn:
 - Dependency injection in TypeScript
 
 ## Troubleshooting
+
+### Web UI Issues
+
+**Problem**: Server won't start / Port 3000 already in use
+- **Solution**: Another process is using port 3000. Either:
+  - Stop the other process: `lsof -ti:3000 | xargs kill`
+  - Change the port: `PORT=3001 npm run server`
+
+**Problem**: Can't access http://localhost:3000
+- **Solution**: Verify server is running (check terminal output for "Server running on...")
+- **Solution**: Try http://127.0.0.1:3000 instead
+- **Solution**: Check firewall settings aren't blocking local connections
+
+**Problem**: Upload fails with "File too large" error
+- **Solution**: Files must be under 50MB. Split large PDFs or compress them
+- **Solution**: Ensure you're uploading PDF files, not other formats
+
+**Problem**: Indexing starts but never completes / progress stuck at 0%
+- **Solution**: Check server logs for API errors (likely LLM Farm connectivity issue)
+- **Solution**: Verify `.env` file has valid `LLM_FARM_API_KEY`
+- **Solution**: Test connectivity: `npm run check-connections`
+- **Solution**: Check proxy setup if within Bosch network (see [PROXY_SETUP.md](./PROXY_SETUP.md))
+
+**Problem**: Settings changes don't persist after page reload
+- **Solution**: Click "Save Settings" button (Reset to Defaults doesn't save automatically)
+- **Solution**: Settings are saved to JSON files in the project directory - check file permissions
+
+**Problem**: Collections not appearing in sidebar
+- **Solution**: Click the "Refresh" button
+- **Solution**: Check `data/collections/` directory exists and has `.embeddings.json` files
+- **Solution**: Verify collections have been indexed (run `npm run generate-embeddings` first)
+
+**Problem**: Query returns "no embeddings found" error
+- **Solution**: Index documents first by clicking "Index Documents"
+- **Solution**: Ensure the selected collection has embeddings (check collection metadata)
+- **Solution**: Upload documents to the collection before indexing
+
+**Problem**: Browser shows "Cannot GET /" or 404 errors
+- **Solution**: Ensure `public/index.html` exists in the project directory
+- **Solution**: Rebuild server: `npm run build-server`
+- **Solution**: Try clearing browser cache
+
+**Problem**: Real-time progress updates not appearing during indexing
+- **Solution**: Server-Sent Events may be blocked by browser extension (disable ad blockers)
+- **Solution**: Check browser console for errors
+- **Solution**: Try a different browser (Chrome/Edge recommended)
 
 ### Proxy Configuration Issues
 

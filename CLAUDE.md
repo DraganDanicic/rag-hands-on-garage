@@ -18,20 +18,16 @@ Create `.env` file from `.env.example` and add:
 
 ### Running the Application
 ```bash
-# Generate embeddings from PDFs (default collection)
-npm run generate-embeddings
+# Web UI (Recommended)
+npm run server                    # Start web server on http://localhost:3000
+npm run server:build             # Build and run production server
 
-# Generate embeddings for specific collection
-npm run generate-embeddings -- --collection project-a
-
-# Start interactive chat (default collection)
-npm run chat
-
-# Chat with specific collection
-npm run chat -- --collection project-a
-
-# Development mode with hot reload
-npm run dev
+# CLI Tools
+npm run generate-embeddings       # Generate embeddings from PDFs (default collection)
+npm run generate-embeddings -- --collection project-a  # For specific collection
+npm run chat                      # Start interactive chat (default collection)
+npm run chat -- --collection project-a  # Chat with specific collection
+npm run dev                       # Development mode with hot reload
 ```
 
 ### Build and Test
@@ -175,7 +171,60 @@ Managed by `ConfigService` (`src/config/`):
 - **Testing**: Jest with ts-jest (ESM mode)
 - **External APIs**: Bosch LLM Farm (embeddings + LLM)
 - **Storage**: Local JSON files (no database)
-- **Interface**: CLI only
+- **Interface**: Web UI (Express + vanilla JavaScript) and CLI
+- **Web Server**: Express.js v4 with CORS and error handling middleware
+- **File Upload**: Multer for multipart/form-data with PDF validation
+- **Real-time Updates**: Server-Sent Events (SSE) for progress streaming
+
+### Web UI Architecture
+
+The web interface provides a browser-based UI for the RAG system, making it accessible to non-technical users.
+
+**Server (`src/server/`):**
+- **server.ts** - Express app setup with middleware chain and route mounting
+- **middleware/** - CORS, error handling, and file upload middleware
+  - `cors.ts` - Enables CORS for development (wildcard origin)
+  - `error.ts` - Global error handler with dev mode stack traces
+  - `upload.ts` - Multer configuration with PDF validation and 50MB limit
+- **routes/** - REST API endpoints
+  - `collections.ts` - GET (list), DELETE (remove collection)
+  - `upload.ts` - POST (multipart file upload)
+  - `indexing.ts` - POST (SSE-based document processing)
+  - `query.ts` - POST (RAG query with question)
+  - `settings.ts` - GET/PUT (configuration management)
+- **utils/**
+  - `SSEProgressReporter.ts` - Adapter implementing IProgressReporter via Server-Sent Events
+  - `settingsValidation.ts` - Input validation for settings updates
+
+**Frontend (`public/index.html`):**
+- Single-page application using vanilla JavaScript (no framework/build step)
+- CSS Grid layout: sidebar (collections + upload) | chat area | settings panel
+- **Features:**
+  - Collections list with metadata (embeddings count, chunks count)
+  - Drag-and-drop file upload with PDF validation
+  - Real-time indexing progress via Server-Sent Events
+  - Chat interface with user/assistant message styling
+  - Collapsible settings panel with real-time validation
+  - Collection management (delete with confirmation)
+- **State Management:**
+  - Active collection stored in localStorage
+  - Settings loaded on-demand from GET /api/settings
+  - No client-side state framework (direct DOM manipulation)
+- **SSE Implementation:**
+  - Uses fetch() + ReadableStream (not EventSource) to support POST requests
+  - Manual parsing: split on `\n\n`, extract `data:` prefix, parse JSON
+  - Handles progress, info, complete, and error event types
+
+**Key Design Decisions:**
+1. **No build step**: Single HTML file with inline CSS and JavaScript for simplicity
+2. **Server-Sent Events**: Real-time progress without WebSockets complexity
+3. **Adapter Pattern**: SSEProgressReporter converts IProgressReporter to SSE without modifying workflows
+4. **Collection-per-request**: Each API request creates new Container instance for proper isolation
+5. **Client-side validation**: Matches server-side constraints for immediate feedback
+6. **Vanilla JavaScript**: No framework dependencies, minimal complexity
+
+**API Documentation:**
+See `API.md` for detailed REST endpoint specifications.
 
 ### Data Structure
 
